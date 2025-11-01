@@ -5,11 +5,12 @@ import { useState, useEffect } from 'react';
 interface DiceRollerProps {
   eventId: number;
   applicationId?: number;
+  selectedTeam: 'A' | 'B';
   onComplete: (application: any) => void;
   onCancel: () => void;
 }
 
-export default function DiceRoller({ eventId, applicationId, onComplete, onCancel }: DiceRollerProps) {
+export default function DiceRoller({ eventId, applicationId, selectedTeam, onComplete, onCancel }: DiceRollerProps) {
   const [tickets, setTickets] = useState(0);
   const [useTicket, setUseTicket] = useState(false);
   const [rolling, setRolling] = useState(false);
@@ -59,7 +60,7 @@ export default function DiceRoller({ eventId, applicationId, onComplete, onCance
           body: JSON.stringify({
             eventId,
             useTicket,
-            preferredTeam: 'any',
+            preferredTeam: selectedTeam,
           }),
         });
         const data = await res.json();
@@ -89,6 +90,10 @@ export default function DiceRoller({ eventId, applicationId, onComplete, onCance
             <h3 className="text-2xl font-bold mb-4 text-center">
               {applicationId ? 'サイコロ振り直し' : 'サイコロを振る'}
             </h3>
+
+            <div className="mb-4 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg text-center">
+              <span className="font-bold">チーム{selectedTeam}に申し込みます</span>
+            </div>
 
             {!applicationId && tickets > 0 && (
               <div className="mb-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">

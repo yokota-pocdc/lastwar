@@ -13,6 +13,7 @@ interface Result {
   used_ticket: number;
   total_score: number;
   is_doubles: number;
+  preferred_team: 'A' | 'B';
   result_team?: string;
   result_status?: string;
 }
@@ -45,10 +46,11 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
   };
 
   const exportToCSV = () => {
-    const headers = ['順位', '名前', 'サイコロ1', 'サイコロ2', 'スコア', 'チケット', '合計', '結果チーム', '状態'];
+    const headers = ['順位', '名前', '希望チーム', 'サイコロ1', 'サイコロ2', 'スコア', 'チケット', '合計', '結果チーム', '状態'];
     const rows = results.map((r, idx) => [
       idx + 1,
       r.user_name,
+      r.preferred_team,
       r.dice1,
       r.dice2,
       r.dice_score,
@@ -122,11 +124,12 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
               <tr>
                 <th className="px-4 py-3 text-left">順位</th>
                 <th className="px-4 py-3 text-left">名前</th>
+                <th className="px-4 py-3 text-left">希望</th>
                 <th className="px-4 py-3 text-left">サイコロ</th>
                 <th className="px-4 py-3 text-left">スコア</th>
                 <th className="px-4 py-3 text-left">チケット</th>
                 <th className="px-4 py-3 text-left">合計</th>
-                <th className="px-4 py-3 text-left">チーム</th>
+                <th className="px-4 py-3 text-left">結果</th>
                 <th className="px-4 py-3 text-left">状態</th>
               </tr>
             </thead>
@@ -135,6 +138,13 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                 <tr key={result.id} className="border-t hover:bg-gray-50">
                   <td className="px-4 py-3 font-bold">{index + 1}</td>
                   <td className="px-4 py-3">{result.user_name}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded text-white text-sm font-bold ${
+                      result.preferred_team === 'A' ? 'bg-blue-500' : 'bg-purple-500'
+                    }`}>
+                      {result.preferred_team}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
                     <span className="font-mono">
                       [{result.dice1}] [{result.dice2}]

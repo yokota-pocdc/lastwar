@@ -20,7 +20,7 @@ export interface Application {
   user_id: number;
   total_score: number;
   created_at: string;
-  preferred_team: 'A' | 'B' | 'any';
+  preferred_team: 'A' | 'B';
 }
 
 export interface LotteryResult {
@@ -52,33 +52,8 @@ export function executeLottery(
   for (const app of sorted) {
     let assigned = false;
 
-    if (useTeamB) {
-      // チームA/B両方使用
-      if (app.preferred_team === 'A' || app.preferred_team === 'any') {
-        if (teamACount < teamAParticipants) {
-          results.push({ applicationId: app.id, resultTeam: 'A', resultStatus: 'participant' });
-          teamACount++;
-          assigned = true;
-        } else if (teamACount < teamACapacity) {
-          results.push({ applicationId: app.id, resultTeam: 'A', resultStatus: 'candidate' });
-          teamACount++;
-          assigned = true;
-        }
-      }
-
-      if (!assigned && (app.preferred_team === 'B' || app.preferred_team === 'any')) {
-        if (teamBCount < teamBParticipants) {
-          results.push({ applicationId: app.id, resultTeam: 'B', resultStatus: 'participant' });
-          teamBCount++;
-          assigned = true;
-        } else if (teamBCount < teamBCapacity) {
-          results.push({ applicationId: app.id, resultTeam: 'B', resultStatus: 'candidate' });
-          teamBCount++;
-          assigned = true;
-        }
-      }
-    } else {
-      // チームAのみ使用
+    // ユーザーが選択したチームにのみ割り当てる
+    if (app.preferred_team === 'A') {
       if (teamACount < teamAParticipants) {
         results.push({ applicationId: app.id, resultTeam: 'A', resultStatus: 'participant' });
         teamACount++;
@@ -88,10 +63,21 @@ export function executeLottery(
         teamACount++;
         assigned = true;
       }
+    } else if (app.preferred_team === 'B' && useTeamB) {
+      if (teamBCount < teamBParticipants) {
+        results.push({ applicationId: app.id, resultTeam: 'B', resultStatus: 'participant' });
+        teamBCount++;
+        assigned = true;
+      } else if (teamBCount < teamBCapacity) {
+        results.push({ applicationId: app.id, resultTeam: 'B', resultStatus: 'candidate' });
+        teamBCount++;
+        assigned = true;
+      }
     }
 
+    // 選択したチームが満員の場合は落選
     if (!assigned) {
-      results.push({ applicationId: app.id, resultTeam: 'A', resultStatus: 'rejected' });
+      results.push({ applicationId: app.id, resultTeam: app.preferred_team, resultStatus: 'rejected' });
     }
   }
 

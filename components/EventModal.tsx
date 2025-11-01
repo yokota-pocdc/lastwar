@@ -21,6 +21,7 @@ interface Application {
   total_score: number;
   is_doubles: number;
   rerolled: number;
+  preferred_team: 'A' | 'B';
   result_team?: string;
   result_status?: string;
 }
@@ -34,6 +35,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<'A' | 'B' | null>(null);
 
   useEffect(() => {
     fetchApplication();
@@ -53,7 +55,8 @@ export default function EventModal({ event, onClose }: EventModalProps) {
     }
   };
 
-  const handleApplyClick = () => {
+  const handleApplyClick = (team: 'A' | 'B') => {
+    setSelectedTeam(team);
     setShowDiceRoller(true);
   };
 
@@ -119,6 +122,10 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-4">あなたの申込内容</h3>
 
+              <div className="mb-3 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg">
+                <span className="font-bold">希望チーム: チーム{application.preferred_team}</span>
+              </div>
+
               <div className="space-y-3">
                 <div className="flex items-center gap-4">
                   <span className="text-4xl">🎲</span>
@@ -159,7 +166,10 @@ export default function EventModal({ event, onClose }: EventModalProps) {
 
                 {!application.rerolled && event.status === 'open' && (
                   <button
-                    onClick={() => setShowDiceRoller(true)}
+                    onClick={() => {
+                      setSelectedTeam(application.preferred_team);
+                      setShowDiceRoller(true);
+                    }}
                     className="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg transition"
                   >
                     🎲 サイコロ振り直し（1回のみ）
@@ -176,22 +186,39 @@ export default function EventModal({ event, onClose }: EventModalProps) {
           ) : (
             <div className="text-center">
               {event.status === 'open' ? (
-                <button
-                  onClick={handleApplyClick}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-xl transition"
-                >
-                  参加申し込み
-                </button>
+                <div className="space-y-4">
+                  <h3 className="text-xl font-bold mb-4">参加するチームを選択してください</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    ※チームAとチームBは別の日時で開催されます。どちらか一方のみ選択できます。
+                  </p>
+                  <div className="flex gap-4 justify-center">
+                    <button
+                      onClick={() => handleApplyClick('A')}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-xl transition flex-1 max-w-xs"
+                    >
+                      チームA
+                    </button>
+                    {event.use_team_b === 1 && (
+                      <button
+                        onClick={() => handleApplyClick('B')}
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-lg text-xl transition flex-1 max-w-xs"
+                      >
+                        チームB
+                      </button>
+                    )}
+                  </div>
+                </div>
               ) : (
                 <p className="text-gray-500">このイベントは受付を終了しています</p>
               )}
             </div>
           )}
 
-          {showDiceRoller && (
+          {showDiceRoller && selectedTeam && (
             <DiceRoller
               eventId={event.id}
               applicationId={application?.id}
+              selectedTeam={application?.preferred_team || selectedTeam}
               onComplete={handleApplicationComplete}
               onCancel={() => setShowDiceRoller(false)}
             />
