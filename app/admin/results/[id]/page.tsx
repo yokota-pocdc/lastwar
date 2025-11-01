@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { use } from 'react';
 import Link from 'next/link';
 
 interface Result {
@@ -18,19 +17,18 @@ interface Result {
   result_status?: string;
 }
 
-export default function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
+export default function ResultsPage({ params }: { params: { id: string } }) {
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventTitle, setEventTitle] = useState('');
 
   useEffect(() => {
     fetchResults();
-  }, [resolvedParams.id]);
+  }, [params.id]);
 
   const fetchResults = async () => {
     try {
-      const res = await fetch(`/api/admin/results?eventId=${resolvedParams.id}`);
+      const res = await fetch(`/api/admin/results?eventId=${params.id}`);
       const data = await res.json();
       if (res.ok) {
         setResults(data.results);
@@ -98,27 +96,28 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-purple-600">抽選結果</h1>
-            <Link href="/admin" className="text-blue-600 hover:underline">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-purple-600">抽選結果</h1>
+            <Link href="/admin" className="text-sm sm:text-base text-blue-600 hover:underline">
               ← 管理画面に戻る
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold">{eventTitle}</h2>
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h2 className="text-lg sm:text-xl font-bold">{eventTitle}</h2>
           <button
             onClick={exportToCSV}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition"
+            className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm sm:text-base"
           >
             📥 CSV出力
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        {/* PC用テーブル表示 */}
+        <div className="hidden md:block bg-white rounded-lg shadow-lg overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
@@ -186,28 +185,91 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
           )}
         </div>
 
+        {/* スマホ用カード表示 */}
+        <div className="md:hidden space-y-4">
+          {results.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-lg p-8 text-center text-gray-500">
+              まだ申込者がいません
+            </div>
+          ) : (
+            results.map((result, index) => (
+              <div key={result.id} className="bg-white rounded-lg shadow-lg p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="text-2xl font-bold text-gray-700">#{index + 1}</div>
+                    <div>
+                      <div className="font-bold text-lg">{result.user_name}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`px-2 py-1 rounded text-white text-xs font-bold ${
+                          result.preferred_team === 'A' ? 'bg-blue-500' : 'bg-purple-500'
+                        }`}>
+                          希望: {result.preferred_team}
+                        </span>
+                        {result.result_team && (
+                          <span className="text-xs font-bold">→ チーム{result.result_team}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {getStatusBadge(result.result_status)}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-xs text-gray-600">サイコロ</div>
+                    <div className="font-mono font-bold">
+                      [{result.dice1}] [{result.dice2}]
+                      {result.is_doubles === 1 && (
+                        <span className="ml-1 text-red-600 text-xs">×2</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-xs text-gray-600">スコア</div>
+                    <div className="font-bold">{result.dice_score}点</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-xs text-gray-600">チケット</div>
+                    <div className="font-bold">
+                      {result.used_ticket === 1 ? (
+                        <span className="text-yellow-600">+12点</span>
+                      ) : (
+                        'なし'
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 rounded p-2 border-2 border-blue-300">
+                    <div className="text-xs text-gray-600">合計</div>
+                    <div className="font-bold text-lg text-blue-600">{result.total_score}点</div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-bold mb-2">📊 統計</h3>
-          <div className="grid grid-cols-4 gap-4">
+          <h3 className="font-bold mb-2 text-sm sm:text-base">📊 統計</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div>
-              <div className="text-sm text-gray-600">総申込者数</div>
-              <div className="text-2xl font-bold">{results.length}人</div>
+              <div className="text-xs sm:text-sm text-gray-600">総申込者数</div>
+              <div className="text-xl sm:text-2xl font-bold">{results.length}人</div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">参加者</div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-xs sm:text-sm text-gray-600">参加者</div>
+              <div className="text-xl sm:text-2xl font-bold text-green-600">
                 {results.filter(r => r.result_status === 'participant').length}人
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">候補者</div>
-              <div className="text-2xl font-bold text-yellow-600">
+              <div className="text-xs sm:text-sm text-gray-600">候補者</div>
+              <div className="text-xl sm:text-2xl font-bold text-yellow-600">
                 {results.filter(r => r.result_status === 'candidate').length}人
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">落選</div>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-xs sm:text-sm text-gray-600">落選</div>
+              <div className="text-xl sm:text-2xl font-bold text-red-600">
                 {results.filter(r => r.result_status === 'rejected').length}人
               </div>
             </div>
