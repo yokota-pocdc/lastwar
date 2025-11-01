@@ -7,6 +7,7 @@ interface Event {
   id: number;
   title: string;
   event_type: 'desert' | 'gap';
+  team: 'A' | 'B';
   event_date: string;
   status: string;
   lottery_executed: number;
@@ -111,20 +112,20 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-purple-600">管理画面</h1>
-            <Link href="/" className="text-blue-600 hover:underline">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-purple-600">管理画面</h1>
+            <Link href="/" className="text-sm sm:text-base text-blue-600 hover:underline">
               ← トップに戻る
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        <div className="mb-4 sm:mb-6">
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition text-sm sm:text-base"
           >
             ➕ 新規イベント作成
           </button>
@@ -187,17 +188,17 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="submit"
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition"
                 >
                   作成
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
-                  className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg transition"
+                  className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg transition"
                 >
                   キャンセル
                 </button>
@@ -206,7 +207,8 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        {/* PC用テーブル表示 */}
+        <div className="hidden md:block bg-white rounded-lg shadow-lg overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
@@ -274,6 +276,64 @@ export default function AdminPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* スマホ用カード表示 */}
+        <div className="md:hidden space-y-4">
+          {events.map((event) => (
+            <div key={event.id} className="bg-white rounded-lg shadow-lg p-4">
+              <div className="mb-3">
+                <h3 className="font-bold text-lg mb-2">{event.title}</h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`px-2 py-1 rounded text-white text-xs ${
+                    event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
+                  }`}>
+                    {event.event_type === 'desert' ? '砂漠' : '狭間'}
+                  </span>
+                  <span className="text-xs">チーム{event.team}</span>
+                  {event.lottery_executed ? (
+                    <span className="text-green-600 font-bold text-xs">抽選済み</span>
+                  ) : (
+                    <span className="text-blue-600 text-xs">{event.status === 'open' ? '受付中' : '受付終了'}</span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">
+                  📅 {new Date(event.event_date).toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                {!event.lottery_executed && (
+                  <button
+                    onClick={() => executeLottery(event.id)}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition font-medium"
+                  >
+                    🎲 抽選実行
+                  </button>
+                )}
+                <Link
+                  href={`/admin/results/${event.id}`}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition inline-block text-center font-medium"
+                >
+                  📊 結果表示
+                </Link>
+                {!event.lottery_executed && (
+                  <button
+                    onClick={() => handleDelete(event.id)}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition font-medium"
+                  >
+                    🗑️ 削除
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
