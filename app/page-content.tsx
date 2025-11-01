@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Calendar from '@/components/Calendar';
+import EventList from '@/components/EventList';
 import LoginForm from '@/components/LoginForm';
 import Header from '@/components/Header';
 
@@ -65,8 +65,8 @@ export default function PageContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header user={user} />
-      <main className="container mx-auto px-4 py-8">
-        <Calendar />
+      <main>
+        <EventList />
       </main>
     </div>
   );

@@ -9,8 +9,10 @@ interface Event {
   title: string;
   event_type: 'desert' | 'gap';
   event_date: string;
+  team: 'A' | 'B';
+  event_group: string;
   status: 'open' | 'closed' | 'finished';
-  use_team_b: number;
+  google_event_id?: string;
 }
 
 export default function Calendar() {

@@ -8,8 +8,10 @@ interface Event {
   title: string;
   event_type: 'desert' | 'gap';
   event_date: string;
+  team: 'A' | 'B';
+  event_group: string;
   status: 'open' | 'closed' | 'finished';
-  use_team_b: number;
+  google_event_id?: string;
 }
 
 interface Application {
@@ -35,7 +37,6 @@ export default function EventModal({ event, onClose }: EventModalProps) {
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<'A' | 'B' | null>(null);
 
   useEffect(() => {
     fetchApplication();
@@ -55,8 +56,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
     }
   };
 
-  const handleApplyClick = (team: 'A' | 'B') => {
-    setSelectedTeam(team);
+  const handleApplyClick = () => {
     setShowDiceRoller(true);
   };
 
@@ -166,10 +166,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
 
                 {!application.rerolled && event.status === 'open' && (
                   <button
-                    onClick={() => {
-                      setSelectedTeam(application.preferred_team);
-                      setShowDiceRoller(true);
-                    }}
+                    onClick={() => setShowDiceRoller(true)}
                     className="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg transition"
                   >
                     🎲 サイコロ振り直し（1回のみ）
@@ -187,26 +184,26 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             <div className="text-center">
               {event.status === 'open' ? (
                 <div className="space-y-4">
-                  <h3 className="text-xl font-bold mb-4">参加するチームを選択してください</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    ※チームAとチームBは別の日時で開催されます。どちらか一方のみ選択できます。
-                  </p>
-                  <div className="flex gap-4 justify-center">
-                    <button
-                      onClick={() => handleApplyClick('A')}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-xl transition flex-1 max-w-xs"
-                    >
-                      チームA
-                    </button>
-                    {event.use_team_b === 1 && (
-                      <button
-                        onClick={() => handleApplyClick('B')}
-                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-lg text-xl transition flex-1 max-w-xs"
-                      >
-                        チームB
-                      </button>
-                    )}
+                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p className="text-sm text-gray-600 mb-2">このイベントは</p>
+                    <div className={`inline-block px-6 py-3 rounded-full text-white text-xl font-bold ${
+                      event.team === 'A' ? 'bg-blue-500' : 'bg-purple-500'
+                    }`}>
+                      チーム{event.team}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">での参加となります</p>
                   </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    ※{event.event_group}の{event.team === 'A' ? 'B' : 'A'}には申し込めません
+                  </p>
+                  <button
+                    onClick={handleApplyClick}
+                    className={`${
+                      event.team === 'A' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'
+                    } text-white font-bold py-4 px-8 rounded-lg text-xl transition w-full max-w-md`}
+                  >
+                    🎲 チーム{event.team}に申し込む
+                  </button>
                 </div>
               ) : (
                 <p className="text-gray-500">このイベントは受付を終了しています</p>
@@ -214,11 +211,11 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             </div>
           )}
 
-          {showDiceRoller && selectedTeam && (
+          {showDiceRoller && (
             <DiceRoller
               eventId={event.id}
               applicationId={application?.id}
-              selectedTeam={application?.preferred_team || selectedTeam}
+              selectedTeam={application?.preferred_team || event.team}
               onComplete={handleApplicationComplete}
               onCancel={() => setShowDiceRoller(false)}
             />

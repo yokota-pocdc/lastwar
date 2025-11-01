@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
     }
 
-    const { eventId, useTicket: wantsTicket, preferredTeam } = await request.json();
+    const { eventId, useTicket: wantsTicket } = await request.json();
 
     // イベント存在確認
     const event = db.prepare('SELECT * FROM events WHERE id = ?').get(eventId) as any;
@@ -33,6 +33,24 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       return NextResponse.json({ error: '既に申込済みです' }, { status: 400 });
+    }
+
+    // 同じグループの別チームに申込済みか確認（相互排他）
+    if (event.event_group) {
+      const conflictingApplication = db.prepare(`
+        SELECT a.*, e.team, e.event_group, e.title
+        FROM applications a
+        JOIN events e ON a.event_id = e.id
+        WHERE a.user_id = ?
+          AND e.event_group = ?
+          AND e.team != ?
+      `).get(session.userId, event.event_group, event.team) as any;
+
+      if (conflictingApplication) {
+        return NextResponse.json({
+          error: `${event.event_group}のチーム${conflictingApplication.team}に既に申込済みです。同じグループのA/B両方には申し込めません。`
+        }, { status: 400 });
+      }
     }
 
     // サイコロを振る
@@ -64,7 +82,7 @@ export async function POST(request: NextRequest) {
       diceScore,
       usedTicket ? 1 : 0,
       totalScore,
-      preferredTeam || 'any'
+      event.team
     );
 
     const application = db.prepare('SELECT * FROM applications WHERE id = ?').get(result.lastInsertRowid);

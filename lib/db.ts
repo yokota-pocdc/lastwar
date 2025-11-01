@@ -24,16 +24,35 @@ export function initializeDatabase() {
       title TEXT NOT NULL,
       event_type TEXT NOT NULL CHECK(event_type IN ('desert', 'gap')),
       event_date TEXT NOT NULL,
-      team_a_capacity INTEGER DEFAULT 30,
-      team_b_capacity INTEGER DEFAULT 30,
-      team_a_participants INTEGER DEFAULT 20,
-      team_b_participants INTEGER DEFAULT 20,
-      use_team_b INTEGER DEFAULT 1,
+      team TEXT CHECK(team IN ('A', 'B')),
+      event_group TEXT,
+      google_event_id TEXT UNIQUE,
+      capacity INTEGER DEFAULT 30,
+      participants_limit INTEGER DEFAULT 20,
       status TEXT DEFAULT 'open' CHECK(status IN ('open', 'closed', 'finished')),
       lottery_executed INTEGER DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // 既存のカラムをマイグレーション
+  try {
+    db.exec(`ALTER TABLE events ADD COLUMN team TEXT CHECK(team IN ('A', 'B'))`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
+
+  try {
+    db.exec(`ALTER TABLE events ADD COLUMN event_group TEXT`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
+
+  try {
+    db.exec(`ALTER TABLE events ADD COLUMN google_event_id TEXT UNIQUE`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
 
   // 参加申込テーブル
   db.exec(`

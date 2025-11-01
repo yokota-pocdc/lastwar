@@ -15,8 +15,8 @@
     "react-dom": "^18.3.0",
     "better-sqlite3": "^11.0.0",
     "date-fns": "^3.0.0",
-    "react-calendar": "^4.8.0",
-    "iron-session": "^8.0.0"
+    "iron-session": "^8.0.0",
+    "googleapis": "^128.0.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
