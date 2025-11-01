@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import db from '@/lib/db';
 import { createCalendarEvent, parseEventType } from '@/lib/google-calendar';
+import { getWeek, getYear } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,28 +40,45 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json();
-    const { title, event_date } = data;
+    const { title, event_type, event_date } = data;
 
-    if (!title || !event_date) {
+    if (!title || !event_type || !event_date) {
       return NextResponse.json({ error: '必須項目が不足しています' }, { status: 400 });
     }
 
-    // タイトルからイベントタイプを自動判定（週情報を含む）
-    const parsed = parseEventType(title, event_date);
-    if (!parsed.type || !parsed.team || !parsed.group) {
+    // event_type から type と team を分離
+    // 例: 'desert-a' -> type='desert', team='A'
+    const [baseType, teamLetter] = event_type.split('-');
+    const type = baseType as 'desert' | 'gap';
+    const team = teamLetter.toUpperCase() as 'A' | 'B';
+
+    if (!['desert', 'gap'].includes(type) || !['A', 'B'].includes(team)) {
       return NextResponse.json({
-        error: 'タイトルに「砂漠A」「砂漠B」「狭間A」「狭間B」のいずれかを含めてください'
+        error: '不正なイベント種別です'
       }, { status: 400 });
     }
+
+    // イベントグループ名を生成（週番号を含む）
+    // 例: "砂漠-2025W01"
+    const date = new Date(event_date);
+    const year = getYear(date);
+    const week = getWeek(date, { weekStartsOn: 1 }); // 月曜始まり
+    const baseGroup = type === 'desert' ? '砂漠' : '狭間';
+    const eventGroup = `${baseGroup}-${year}W${week.toString().padStart(2, '0')}`;
+
+    // Google Calendar用のタイトルを生成
+    // 例: "第1回 (砂漠A)"
+    const typeLabel = type === 'desert' ? '砂漠' : '狭間';
+    const calendarTitle = `${title} (${typeLabel}${team})`;
 
     // Googleカレンダーにイベントを作成
     let googleEventId = null;
     let googleHtmlLink = null;
     try {
       const gcalResult = await createCalendarEvent({
-        title,
-        eventType: parsed.type,
-        team: parsed.team,
+        title: calendarTitle,
+        eventType: type,
+        team: team,
         eventDate: event_date,
       });
       googleEventId = gcalResult.googleEventId;
@@ -76,7 +94,7 @@ export async function POST(request: NextRequest) {
         title, event_type, team, event_group, event_date,
         google_event_id, status
       ) VALUES (?, ?, ?, ?, ?, ?, 'open')
-    `).run(title, parsed.type, parsed.team, parsed.group, event_date, googleEventId);
+    `).run(title, type, team, eventGroup, event_date, googleEventId);
 
     const event = db.prepare('SELECT * FROM events WHERE id = ?').get(result.lastInsertRowid);
 

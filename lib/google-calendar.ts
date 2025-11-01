@@ -198,9 +198,9 @@ export async function createCalendarEvent(params: {
       startDateTime = startDateTime.includes('T') ? `${startDateTime}:00` : startDateTime;
     }
 
-    // 開始時刻と終了時刻（1時間後）を計算
+    // 開始時刻と終了時刻（30分後）を計算
     const startDate = new Date(startDateTime);
-    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1時間後
+    const endDate = new Date(startDate.getTime() + 30 * 60 * 1000); // 30分後
 
     // RFC 3339形式に変換（Googleカレンダーが要求する形式）
     const formatToRFC3339 = (date: Date): string => {

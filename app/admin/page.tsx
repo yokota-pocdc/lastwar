@@ -17,9 +17,8 @@ export default function AdminPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    event_type: 'desert',
+    event_type: 'desert-a',
     event_date: '',
-    use_team_b: true,
   });
 
   useEffect(() => {
@@ -53,9 +52,8 @@ export default function AdminPage() {
         setShowCreateForm(false);
         setFormData({
           title: '',
-          event_type: 'desert',
+          event_type: 'desert-a',
           event_date: '',
-          use_team_b: true,
         });
         fetchEvents();
       } else {
@@ -137,49 +135,56 @@ export default function AdminPage() {
             <h2 className="text-xl font-bold mb-4">新規イベント作成</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">タイトル</label>
+                <label className="block text-sm font-medium mb-2">
+                  タイトル <span className="text-red-600">*</span>
+                </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg text-gray-900"
+                  placeholder="例: 第1回、デイリーイベント など"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  ※種別（砂漠/狭間）やチーム（A/B）はプルダウンで選択するため、タイトルに含める必要はありません
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">イベント種別</label>
+                <label className="block text-sm font-medium mb-2">
+                  イベント種別 <span className="text-red-600">*</span>
+                </label>
                 <select
                   value={formData.event_type}
-                  onChange={(e) => setFormData({ ...formData, event_type: e.target.value as 'desert' | 'gap' })}
+                  onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg text-gray-900"
+                  required
                 >
-                  <option value="desert">砂漠の戦場</option>
-                  <option value="gap">狭間の戦場</option>
+                  <option value="desert-a">砂漠A</option>
+                  <option value="desert-b">砂漠B</option>
+                  <option value="gap-a">狭間A</option>
+                  <option value="gap-b">狭間B</option>
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  ※同一週のA/Bは同時申込不可です（月曜〜日曜が1週）
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">開催日</label>
+                <label className="block text-sm font-medium mb-2">
+                  開始日時 <span className="text-red-600">*</span>
+                </label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   value={formData.event_date}
                   onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg text-gray-900"
                   required
                 />
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.use_team_b}
-                    onChange={(e) => setFormData({ ...formData, use_team_b: e.target.checked })}
-                    className="w-5 h-5"
-                  />
-                  <span>チームBを使用する（2チーム編成）</span>
-                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  ※終了日時は開始日時の30分後に自動設定されます
+                </p>
               </div>
 
               <div className="flex gap-3">
