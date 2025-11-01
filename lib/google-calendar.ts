@@ -191,15 +191,37 @@ export async function createCalendarEvent(params: {
       throw new Error('GOOGLE_CALENDAR_ID is not set');
     }
 
+    // datetime-local形式（例: "2025-11-26T21:57"）を正しいISO 8601形式に変換
+    let startDateTime = params.eventDate;
+    if (!startDateTime.includes(':00') || startDateTime.length < 19) {
+      // 秒が含まれていない場合は追加
+      startDateTime = startDateTime.includes('T') ? `${startDateTime}:00` : startDateTime;
+    }
+
+    // 開始時刻と終了時刻（1時間後）を計算
+    const startDate = new Date(startDateTime);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1時間後
+
+    // RFC 3339形式に変換（Googleカレンダーが要求する形式）
+    const formatToRFC3339 = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    };
+
     const event = {
       summary: params.title,
       description: params.description || '',
       start: {
-        dateTime: params.eventDate,
+        dateTime: formatToRFC3339(startDate),
         timeZone: 'Asia/Tokyo',
       },
       end: {
-        dateTime: new Date(new Date(params.eventDate).getTime() + 60 * 60 * 1000).toISOString(), // 1時間後
+        dateTime: formatToRFC3339(endDate),
         timeZone: 'Asia/Tokyo',
       },
     };
@@ -217,6 +239,28 @@ export async function createCalendarEvent(params: {
     };
   } catch (error) {
     console.error('Failed to create calendar event:', error);
+    throw error;
+  }
+}
+
+// Googleカレンダーからイベントを削除
+export async function deleteCalendarEvent(googleEventId: string) {
+  try {
+    const calendar = getCalendarClient(false); // 書き込み権限
+    const calendarId = process.env.GOOGLE_CALENDAR_ID;
+
+    if (!calendarId) {
+      throw new Error('GOOGLE_CALENDAR_ID is not set');
+    }
+
+    await calendar.events.delete({
+      calendarId,
+      eventId: googleEventId,
+    });
+
+    console.log(`Deleted event from Google Calendar: ${googleEventId}`);
+  } catch (error) {
+    console.error('Failed to delete calendar event:', error);
     throw error;
   }
 }

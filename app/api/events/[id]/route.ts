@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import db from '@/lib/db';
+import { deleteCalendarEvent } from '@/lib/google-calendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,21 @@ export async function DELETE(
       }, { status: 400 });
     }
 
+    // イベント情報を取得（Googleカレンダー削除用）
+    const event = db.prepare('SELECT google_event_id FROM events WHERE id = ?').get(params.id) as { google_event_id?: string } | undefined;
+
+    // Googleカレンダーから削除
+    if (event?.google_event_id) {
+      try {
+        await deleteCalendarEvent(event.google_event_id);
+        console.log(`Deleted event from Google Calendar: ${event.google_event_id}`);
+      } catch (error) {
+        console.error('Failed to delete from Google Calendar:', error);
+        // Googleカレンダーの削除に失敗してもDBからは削除する
+      }
+    }
+
+    // データベースから削除
     db.prepare('DELETE FROM events WHERE id = ?').run(params.id);
 
     return NextResponse.json({ success: true });
