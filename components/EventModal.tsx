@@ -120,10 +120,10 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             <div className="text-center py-8">読み込み中...</div>
           ) : application ? (
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h3 className="text-xl font-bold mb-4">あなたの申込内容</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-900">あなたの申込内容</h3>
 
               <div className="mb-3 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg">
-                <span className="font-bold">希望チーム: チーム{application.preferred_team}</span>
+                <span className="font-bold text-gray-900">希望チーム: チーム{application.preferred_team}</span>
               </div>
 
               {application.result_status && (
@@ -135,7 +135,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm text-gray-600">現在の状態</div>
-                      <div className="text-lg font-bold">
+                      <div className="text-lg font-bold text-gray-900">
                         {application.result_status === 'participant' && '🎉 参加者（確定）'}
                         {application.result_status === 'candidate' && '⏳ 候補者'}
                         {application.result_status === 'rejected' && '❌ 落選'}
@@ -169,12 +169,12 @@ export default function EventModal({ event, onClose }: EventModalProps) {
 
                 {application.used_ticket === 1 && (
                   <div className="bg-yellow-100 border-2 border-yellow-400 p-3 rounded-lg">
-                    <span className="text-lg font-bold">🎟️ チケット使用 +12点</span>
+                    <span className="text-lg font-bold text-gray-900">🎟️ チケット使用 +12点</span>
                   </div>
                 )}
 
                 <div className="bg-blue-100 border-2 border-blue-400 p-4 rounded-lg">
-                  <div className="text-xl font-bold">
+                  <div className="text-xl font-bold text-gray-900">
                     合計スコア: {application.total_score}点
                   </div>
                 </div>
@@ -219,7 +219,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
                     <p className="text-sm text-gray-600 mt-2">での参加となります</p>
                   </div>
                   <p className="text-sm text-gray-600 mb-4">
-                    ※{event.event_group}の{event.team === 'A' ? 'B' : 'A'}には申し込めません
+                    ※{event.event_group?.split('-')[0]}の{event.team === 'A' ? 'B' : 'A'}には申し込めません
                   </p>
                   <button
                     onClick={handleApplyClick}

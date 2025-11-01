@@ -128,7 +128,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
             </h3>
 
             <div className="mb-4 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg text-center">
-              <span className="font-bold">チーム{selectedTeam}に申し込みます</span>
+              <span className="font-bold text-gray-900">チーム{selectedTeam}に申し込みます</span>
             </div>
 
             {!applicationId && tickets > 0 && (
@@ -141,7 +141,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
                     className="w-5 h-5"
                   />
                   <div>
-                    <div className="font-bold">🎟️ 絶対参加チケットを使用</div>
+                    <div className="font-bold text-gray-900">🎟️ 絶対参加チケットを使用</div>
                     <div className="text-sm text-gray-600">
                       +12点ボーナス（残り{tickets}枚）
                     </div>
@@ -232,18 +232,18 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
               </div>
             )}
 
-            <div className="text-xl font-bold mb-2">
+            <div className="text-xl font-bold mb-2 text-gray-900">
               サイコロスコア: {result.application?.dice_score || result.newDice?.score}点
             </div>
 
             {result.application?.used_ticket === 1 && (
               <div className="bg-yellow-100 border-2 border-yellow-400 p-2 rounded-lg mb-2">
-                🎟️ チケットボーナス +12点
+                <span className="text-gray-900">🎟️ チケットボーナス +12点</span>
               </div>
             )}
 
             <div className="bg-blue-100 border-2 border-blue-400 p-3 rounded-lg mb-4">
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-gray-900">
                 合計スコア: {result.application?.total_score}点
               </div>
             </div>
