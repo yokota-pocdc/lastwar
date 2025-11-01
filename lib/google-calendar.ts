@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { addDays } from 'date-fns';
+import { addDays, format, getWeek, getYear } from 'date-fns';
 
 // Google Calendar APIクライアントの初期化
 function getCalendarClient(readOnly = true) {
@@ -18,35 +18,55 @@ function getCalendarClient(readOnly = true) {
   return google.calendar({ version: 'v3', auth });
 }
 
-// イベントの種別を判定
-export function parseEventType(title: string): {
+// イベントの種別を判定（週情報を含む）
+export function parseEventType(title: string, eventDate?: string): {
   type: 'desert' | 'gap' | null;
   team: 'A' | 'B' | null;
   group: string | null;
+  baseGroup: string | null;
 } {
   const titleLower = title.toLowerCase();
+  let baseGroup: string | null = null;
+  let type: 'desert' | 'gap' | null = null;
+  let team: 'A' | 'B' | null = null;
 
   // 砂漠A
   if (title.includes('砂漠A') || titleLower.includes('sabakua')) {
-    return { type: 'desert', team: 'A', group: '砂漠' };
+    type = 'desert';
+    team = 'A';
+    baseGroup = '砂漠';
   }
-
   // 砂漠B
-  if (title.includes('砂漠B') || titleLower.includes('sabakub')) {
-    return { type: 'desert', team: 'B', group: '砂漠' };
+  else if (title.includes('砂漠B') || titleLower.includes('sabakub')) {
+    type = 'desert';
+    team = 'B';
+    baseGroup = '砂漠';
   }
-
   // 狭間A
-  if (title.includes('狭間A') || titleLower.includes('hasamaa')) {
-    return { type: 'gap', team: 'A', group: '狭間' };
+  else if (title.includes('狭間A') || titleLower.includes('hasamaa')) {
+    type = 'gap';
+    team = 'A';
+    baseGroup = '狭間';
   }
-
   // 狭間B
-  if (title.includes('狭間B') || titleLower.includes('hasamab')) {
-    return { type: 'gap', team: 'B', group: '狭間' };
+  else if (title.includes('狭間B') || titleLower.includes('hasamab')) {
+    type = 'gap';
+    team = 'B';
+    baseGroup = '狭間';
   }
 
-  return { type: null, team: null, group: null };
+  // 週情報を含めたグループ名を生成
+  let group: string | null = null;
+  if (baseGroup && eventDate) {
+    const date = new Date(eventDate);
+    const year = getYear(date);
+    const week = getWeek(date, { weekStartsOn: 1 }); // 月曜日を週の開始とする
+    group = `${baseGroup}-${year}W${week.toString().padStart(2, '0')}`;
+  } else {
+    group = baseGroup;
+  }
+
+  return { type, team, group, baseGroup };
 }
 
 // Googleカレンダーからイベントを取得
@@ -77,15 +97,15 @@ export async function fetchCalendarEvents() {
     const parsedEvents = events
       .map((event) => {
         const title = event.summary || '';
-        const parsed = parseEventType(title);
-
-        if (!parsed.type || !parsed.team) {
-          return null; // 対象外のイベントは無視
-        }
-
         const startDateTime = event.start?.dateTime || event.start?.date;
         if (!startDateTime) {
           return null;
+        }
+
+        const parsed = parseEventType(title, startDateTime);
+
+        if (!parsed.type || !parsed.team) {
+          return null; // 対象外のイベントは無視
         }
 
         return {

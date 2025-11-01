@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '必須項目が不足しています' }, { status: 400 });
     }
 
-    // タイトルからイベントタイプを自動判定
-    const parsed = parseEventType(title);
+    // タイトルからイベントタイプを自動判定（週情報を含む）
+    const parsed = parseEventType(title, event_date);
     if (!parsed.type || !parsed.team || !parsed.group) {
       return NextResponse.json({
         error: 'タイトルに「砂漠A」「砂漠B」「狭間A」「狭間B」のいずれかを含めてください'

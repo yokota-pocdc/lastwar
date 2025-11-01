@@ -88,7 +88,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
     }
   };
 
-  // サイコロの目を描画
+  // サイコロの目を描画（1は赤、他は黒）
   const renderDots = (number: number) => {
     const dotPositions: { [key: number]: string[] } = {
       1: ['center'],
@@ -100,6 +100,8 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
     };
 
     const positions = dotPositions[number] || [];
+    // 1の目だけ赤、他は黒
+    const dotColor = number === 1 ? 'bg-red-600' : 'bg-gray-900';
 
     return (
       <div className="relative w-full h-full flex items-center justify-center">
@@ -107,7 +109,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
           {['top-left', 'top-center', 'top-right', 'middle-left', 'center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'].map((pos) => (
             <div key={pos} className="flex items-center justify-center">
               {positions.includes(pos) && (
-                <div className="w-2 h-2 bg-white rounded-full shadow-lg" />
+                <div className={`w-2.5 h-2.5 ${dotColor} rounded-full shadow-md`} />
               )}
             </div>
           ))}
@@ -286,13 +288,13 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
           position: absolute;
           width: 80px;
           height: 80px;
-          background: linear-gradient(145deg, #ef4444, #dc2626);
-          border: 2px solid #991b1b;
+          background: linear-gradient(145deg, #ffffff, #f3f4f6);
+          border: 2px solid #d1d5db;
           border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8);
         }
 
         .face.front  { transform: rotateY(0deg) translateZ(40px); }
