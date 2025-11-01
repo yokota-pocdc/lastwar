@@ -21,6 +21,10 @@ export default function EventList() {
   const [showModal, setShowModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newEventTitle, setNewEventTitle] = useState('');
+  const [newEventDate, setNewEventDate] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -70,6 +74,40 @@ export default function EventList() {
     fetchEvents();
   };
 
+  const handleCreateEvent = async () => {
+    if (!newEventTitle || !newEventDate) {
+      alert('タイトルと日時を入力してください');
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newEventTitle,
+          event_date: newEventDate,
+        }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('イベントを作成しました！');
+        setShowCreateForm(false);
+        setNewEventTitle('');
+        setNewEventDate('');
+        fetchEvents();
+      } else {
+        alert(data.error || 'イベント作成に失敗しました');
+      }
+    } catch (error) {
+      alert('エラーが発生しました');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   // グループごとにイベントを整理
   const groupedEvents = events.reduce((acc, event) => {
     const group = event.event_group || 'その他';
@@ -90,16 +128,29 @@ export default function EventList() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      {/* 同期ボタン */}
-      <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">イベント一覧</h1>
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition disabled:bg-gray-400 text-sm"
-        >
-          {syncing ? '同期中...' : '🔄 同期'}
-        </button>
+      {/* ヘッダー */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">イベント一覧</h1>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition text-sm font-bold"
+            >
+              ✚ 新規イベント
+            </button>
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition disabled:bg-gray-400 text-sm"
+            >
+              {syncing ? '同期中...' : '🔄 同期'}
+            </button>
+          </div>
+        </div>
+        <p className="text-sm text-gray-600">
+          イベントを作成するとGoogleカレンダーにも自動登録されます
+        </p>
       </div>
 
       {/* イベントリスト */}
@@ -161,6 +212,64 @@ export default function EventList() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* イベント作成モーダル */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-2xl font-bold mb-4">新規イベント作成</h2>
+
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2">
+                イベント名 <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="text"
+                value={newEventTitle}
+                onChange={(e) => setNewEventTitle(e.target.value)}
+                placeholder="例: 砂漠A 第1回"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-600 mt-1">
+                ※タイトルに「砂漠A」「砂漠B」「狭間A」「狭間B」のいずれかを含めてください
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-bold mb-2">
+                開催日時 <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={newEventDate}
+                onChange={(e) => setNewEventDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCreateEvent}
+                disabled={creating}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition disabled:bg-gray-400"
+              >
+                {creating ? '作成中...' : '作成'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setNewEventTitle('');
+                  setNewEventDate('');
+                }}
+                disabled={creating}
+                className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition disabled:bg-gray-300"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -126,6 +126,31 @@ export default function EventModal({ event, onClose }: EventModalProps) {
                 <span className="font-bold">希望チーム: チーム{application.preferred_team}</span>
               </div>
 
+              {application.result_status && (
+                <div className={`mb-3 p-4 rounded-lg border-2 ${
+                  application.result_status === 'participant' ? 'bg-green-50 border-green-400' :
+                  application.result_status === 'candidate' ? 'bg-yellow-50 border-yellow-400' :
+                  'bg-red-50 border-red-400'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-600">現在の状態</div>
+                      <div className="text-lg font-bold">
+                        {application.result_status === 'participant' && '🎉 参加者（確定）'}
+                        {application.result_status === 'candidate' && '⏳ 候補者'}
+                        {application.result_status === 'rejected' && '❌ 落選'}
+                      </div>
+                    </div>
+                    {getStatusBadge(application.result_status)}
+                  </div>
+                  <div className="mt-2 text-sm text-gray-600">
+                    {application.result_status === 'participant' && '参加者として確定しています！'}
+                    {application.result_status === 'candidate' && '候補者です。上位者がキャンセルした場合、参加できる可能性があります。'}
+                    {application.result_status === 'rejected' && '申込者が多く、残念ながら落選しました。'}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <div className="flex items-center gap-4">
                   <span className="text-4xl">🎲</span>

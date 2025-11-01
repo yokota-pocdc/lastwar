@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import db from '@/lib/db';
 import { rollDice, calculateTotalScore } from '@/lib/lottery';
+import { updateRealtimeRankings, getUserRanking } from '@/lib/realtime-lottery';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,21 +48,30 @@ export async function POST(
         WHERE id = ?
       `).run(newDice1, newDice2, newIsDoubles ? 1 : 0, newDiceScore, newTotalScore, params.id);
 
+      // リアルタイム順位を再計算
+      updateRealtimeRankings(application.event_id);
+
       const updated = db.prepare('SELECT * FROM applications WHERE id = ?').get(params.id);
+      const ranking = getUserRanking(application.event_id, session.userId);
+
       return NextResponse.json({
         success: true,
         improved: true,
-        application: updated
+        application: updated,
+        ranking: ranking
       });
     } else {
       // スコアが改善されなかったが、振り直しフラグは立てる
       db.prepare('UPDATE applications SET rerolled = 1 WHERE id = ?').run(params.id);
 
+      const ranking = getUserRanking(application.event_id, session.userId);
+
       return NextResponse.json({
         success: true,
         improved: false,
         message: '前回のスコアの方が高かったため、そのまま維持されました',
-        newDice: { dice1: newDice1, dice2: newDice2, score: newDiceScore }
+        newDice: { dice1: newDice1, dice2: newDice2, score: newDiceScore },
+        ranking: ranking
       });
     }
   } catch (error) {

@@ -2,13 +2,17 @@ import { google } from 'googleapis';
 import { addDays } from 'date-fns';
 
 // Google Calendar APIクライアントの初期化
-function getCalendarClient() {
+function getCalendarClient(readOnly = true) {
+  const scopes = readOnly
+    ? ['https://www.googleapis.com/auth/calendar.readonly']
+    : ['https://www.googleapis.com/auth/calendar'];
+
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     },
-    scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
+    scopes,
   });
 
   return google.calendar({ version: 'v3', auth });
@@ -149,4 +153,50 @@ export async function syncCalendarEvents(db: any) {
 
   console.log(`Synced ${events.length} events from Google Calendar`);
   return events;
+}
+
+// Googleカレンダーにイベントを作成
+export async function createCalendarEvent(params: {
+  title: string;
+  eventType: 'desert' | 'gap';
+  team: 'A' | 'B';
+  eventDate: string; // ISO 8601形式
+  description?: string;
+}) {
+  try {
+    const calendar = getCalendarClient(false); // 書き込み権限
+    const calendarId = process.env.GOOGLE_CALENDAR_ID;
+
+    if (!calendarId) {
+      throw new Error('GOOGLE_CALENDAR_ID is not set');
+    }
+
+    const event = {
+      summary: params.title,
+      description: params.description || '',
+      start: {
+        dateTime: params.eventDate,
+        timeZone: 'Asia/Tokyo',
+      },
+      end: {
+        dateTime: new Date(new Date(params.eventDate).getTime() + 60 * 60 * 1000).toISOString(), // 1時間後
+        timeZone: 'Asia/Tokyo',
+      },
+    };
+
+    const response = await calendar.events.insert({
+      calendarId,
+      requestBody: event,
+    });
+
+    console.log(`Created event in Google Calendar: ${response.data.id}`);
+
+    return {
+      googleEventId: response.data.id,
+      htmlLink: response.data.htmlLink,
+    };
+  } catch (error) {
+    console.error('Failed to create calendar event:', error);
+    throw error;
+  }
 }

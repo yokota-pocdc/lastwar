@@ -3,6 +3,7 @@ import { getSession } from '@/lib/session';
 import db from '@/lib/db';
 import { rollDice, calculateTotalScore } from '@/lib/lottery';
 import { getRemainingTickets, useTicket } from '@/lib/tickets';
+import { updateRealtimeRankings, getUserRanking } from '@/lib/realtime-lottery';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,9 +86,20 @@ export async function POST(request: NextRequest) {
       event.team
     );
 
-    const application = db.prepare('SELECT * FROM applications WHERE id = ?').get(result.lastInsertRowid);
+    // リアルタイム順位を計算して全員のステータスを更新
+    updateRealtimeRankings(eventId);
 
-    return NextResponse.json({ success: true, application });
+    // 更新された申込情報を取得
+    const updatedApplication = db.prepare('SELECT * FROM applications WHERE id = ?').get(result.lastInsertRowid);
+
+    // 現在の順位情報を取得
+    const ranking = getUserRanking(eventId, session.userId);
+
+    return NextResponse.json({
+      success: true,
+      application: updatedApplication,
+      ranking: ranking
+    });
   } catch (error) {
     console.error('Application creation error:', error);
     return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 });
