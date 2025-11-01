@@ -86,28 +86,6 @@ export default function AdminPage() {
     }
   };
 
-  const executeLottery = async (eventId: number) => {
-    if (!confirm('抽選を実行しますか？実行後は取り消せません。')) return;
-
-    try {
-      const res = await fetch('/api/admin/lottery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId }),
-      });
-
-      if (res.ok) {
-        alert('抽選を実行しました');
-        fetchEvents();
-      } else {
-        const data = await res.json();
-        alert(data.error || '抽選実行に失敗しました');
-      }
-    } catch (error) {
-      alert('エラーが発生しました');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-md">
@@ -248,14 +226,6 @@ export default function AdminPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      {!event.lottery_executed && (
-                        <button
-                          onClick={() => executeLottery(event.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition"
-                        >
-                          抽選実行
-                        </button>
-                      )}
                       <Link
                         href={`/admin/results/${event.id}`}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition inline-block"
@@ -309,14 +279,6 @@ export default function AdminPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                {!event.lottery_executed && (
-                  <button
-                    onClick={() => executeLottery(event.id)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition font-medium"
-                  >
-                    🎲 抽選実行
-                  </button>
-                )}
                 <Link
                   href={`/admin/results/${event.id}`}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition inline-block text-center font-medium"

@@ -110,9 +110,30 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             </button>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-6 space-y-2">
             <p className="text-gray-600">
-              📅 開催日: {new Date(event.event_date).toLocaleDateString('ja-JP')}
+              📅 開催日: {new Date(event.event_date).toLocaleString('ja-JP', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </p>
+            <p className="text-sm text-orange-600 font-medium">
+              ⏰ 申込締切: {(() => {
+                const eventDate = new Date(event.event_date);
+                const deadline = new Date(eventDate);
+                deadline.setDate(deadline.getDate() - 1);
+                deadline.setHours(0, 0, 0, 0);
+                return deadline.toLocaleString('ja-JP', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+              })()}（開始の前日0時）
             </p>
           </div>
 

@@ -4,6 +4,7 @@ import db from '@/lib/db';
 import { rollDice, calculateTotalScore } from '@/lib/lottery';
 import { getRemainingTickets, useTicket } from '@/lib/tickets';
 import { updateRealtimeRankings, getUserRanking } from '@/lib/realtime-lottery';
+import { autoUpdateEventStatus, isEventOpen } from '@/lib/auto-lottery';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,14 +18,18 @@ export async function POST(request: NextRequest) {
 
     const { eventId, useTicket: wantsTicket } = await request.json();
 
+    // 申込前に自動更新処理を実行
+    autoUpdateEventStatus();
+
     // イベント存在確認
     const event = db.prepare('SELECT * FROM events WHERE id = ?').get(eventId) as any;
     if (!event) {
       return NextResponse.json({ error: 'イベントが見つかりません' }, { status: 404 });
     }
 
-    if (event.status !== 'open') {
-      return NextResponse.json({ error: 'このイベントは受付終了しています' }, { status: 400 });
+    // 締め切り時刻チェック
+    if (!isEventOpen(event.event_date, event.status, event.lottery_executed)) {
+      return NextResponse.json({ error: 'このイベントは受付終了しています（開始日の前日0時まで）' }, { status: 400 });
     }
 
     // 既に申込済みか確認

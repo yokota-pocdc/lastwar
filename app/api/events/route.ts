@@ -3,12 +3,16 @@ import { getSession } from '@/lib/session';
 import db from '@/lib/db';
 import { createCalendarEvent, parseEventType } from '@/lib/google-calendar';
 import { getWeek, getYear } from 'date-fns';
+import { autoUpdateEventStatus } from '@/lib/auto-lottery';
 
 export const dynamic = 'force-dynamic';
 
 // イベント一覧取得
 export async function GET(request: NextRequest) {
   try {
+    // イベント取得前に自動更新処理を実行
+    autoUpdateEventStatus();
+
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month'); // YYYY-MM形式
 
