@@ -11,6 +11,7 @@ interface Event {
   team: 'A' | 'B';
   event_group: string;
   status: 'open' | 'closed' | 'finished';
+  lottery_executed?: number;
   google_event_id?: string;
 }
 
@@ -175,7 +176,9 @@ export default function EventModal({ event, onClose }: EventModalProps) {
                     <div>
                       <div className="text-sm text-gray-600">現在の状態</div>
                       <div className="text-lg font-bold text-gray-900">
-                        {application.result_status === 'participant' && '🎉 参加者（確定）'}
+                        {application.result_status === 'participant' && (
+                          event.lottery_executed ? '🎉 参加者（確定）' : '✅ 申込済（参加予定）'
+                        )}
                         {application.result_status === 'candidate' && '⏳ 候補者'}
                         {application.result_status === 'rejected' && '❌ 落選'}
                       </div>
@@ -183,7 +186,11 @@ export default function EventModal({ event, onClose }: EventModalProps) {
                     {getStatusBadge(application.result_status)}
                   </div>
                   <div className="mt-2 text-sm text-gray-600">
-                    {application.result_status === 'participant' && '参加者として確定しています！'}
+                    {application.result_status === 'participant' && (
+                      event.lottery_executed
+                        ? '参加者として確定しています！'
+                        : '申し込みを受け付けました。締切後に抽選または自動確定されます。'
+                    )}
                     {application.result_status === 'candidate' && '候補者です。上位者がキャンセルした場合、参加できる可能性があります。'}
                     {application.result_status === 'rejected' && '申込者が多く、残念ながら落選しました。'}
                   </div>
