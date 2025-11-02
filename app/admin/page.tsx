@@ -16,6 +16,7 @@ interface Event {
 export default function AdminPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     event_type: 'desert-a',
@@ -86,6 +87,28 @@ export default function AdminPage() {
     }
   };
 
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await fetch('/api/sync-calendar', {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`${data.syncedCount}件のイベントを同期しました`);
+        fetchEvents();
+      } else {
+        const data = await res.json();
+        alert(data.error || '同期に失敗しました');
+      }
+    } catch (error) {
+      alert('エラーが発生しました');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-md">
@@ -100,6 +123,34 @@ export default function AdminPage() {
       </div>
 
       <div className="container mx-auto px-4 py-4 sm:py-8">
+        {/* Googleカレンダー埋め込み */}
+        <div className="mb-6 bg-white rounded-lg shadow-lg p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+            <h2 className="text-xl font-bold">Googleカレンダー</h2>
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition text-sm sm:text-base disabled:bg-gray-400"
+            >
+              {syncing ? '同期中...' : '🔄 カレンダーから同期'}
+            </button>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            カレンダー上でイベントを作成・編集し、「カレンダーから同期」ボタンを押してください。<br/>
+            <span className="font-medium">タイトル形式:</span> 「イベント名 (砂漠A)」「イベント名 (狭間B)」など
+          </p>
+          <div className="w-full h-[600px] border rounded-lg overflow-hidden">
+            <iframe
+              src={`https://calendar.google.com/calendar/embed?src=${encodeURIComponent(process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID || '')}&ctz=Asia/Tokyo&mode=WEEK`}
+              className="w-full h-full"
+              frameBorder="0"
+              scrolling="no"
+            />
+          </div>
+        </div>
+
+        {/* 旧イベント作成フォーム（コメントアウト） */}
+        {/*
         <div className="mb-4 sm:mb-6">
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
@@ -184,6 +235,7 @@ export default function AdminPage() {
             </form>
           </div>
         )}
+        */}
 
         {/* PC用テーブル表示 */}
         <div className="hidden md:block bg-white rounded-lg shadow-lg overflow-hidden">

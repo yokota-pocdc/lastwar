@@ -30,26 +30,33 @@ export function parseEventType(title: string, eventDate?: string): {
   let type: 'desert' | 'gap' | null = null;
   let team: 'A' | 'B' | null = null;
 
+  // 括弧内のパターンを優先的にチェック: (砂漠A), (狭間B) など
+  const bracketMatch = title.match(/\(([^)]+)\)/);
+  const bracketContent = bracketMatch ? bracketMatch[1] : '';
+
+  // 括弧内、または全体のタイトルから判定
+  const checkText = bracketContent || title;
+
   // 砂漠A
-  if (title.includes('砂漠A') || titleLower.includes('sabakua')) {
+  if (checkText.includes('砂漠A') || checkText.toLowerCase().includes('sabakua')) {
     type = 'desert';
     team = 'A';
     baseGroup = '砂漠';
   }
   // 砂漠B
-  else if (title.includes('砂漠B') || titleLower.includes('sabakub')) {
+  else if (checkText.includes('砂漠B') || checkText.toLowerCase().includes('sabakub')) {
     type = 'desert';
     team = 'B';
     baseGroup = '砂漠';
   }
   // 狭間A
-  else if (title.includes('狭間A') || titleLower.includes('hasamaa')) {
+  else if (checkText.includes('狭間A') || checkText.toLowerCase().includes('hasamaa')) {
     type = 'gap';
     team = 'A';
     baseGroup = '狭間';
   }
   // 狭間B
-  else if (title.includes('狭間B') || titleLower.includes('hasamab')) {
+  else if (checkText.includes('狭間B') || checkText.toLowerCase().includes('hasamab')) {
     type = 'gap';
     team = 'B';
     baseGroup = '狭間';
