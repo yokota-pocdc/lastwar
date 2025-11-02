@@ -17,6 +17,30 @@
    - `data_mismatch`: タイトルや日時が異なるイベント
 4. **Webhook (Push通知)**: Google Calendarの変更をリアルタイムで検知
 
+### クイックスタート
+
+本番環境でWebhookを登録する最も簡単な方法:
+
+```bash
+# 1. サーバーにSSHログイン
+ssh user@your-server
+
+# 2. プロジェクトディレクトリへ移動
+cd /path/to/lastwar
+
+# 3. Webhookを登録（公開URLを指定）
+npm run webhook:register https://jfkh.add3.cloud/api/webhooks/google-calendar
+
+# 4. 登録状態を確認
+npm run webhook:status
+```
+
+**利用可能なコマンド:**
+- `npm run webhook:register <url>` - Webhookを登録
+- `npm run webhook:status` - Webhook状態を確認
+- `npm run webhook:renew <url>` - Webhookを更新
+- `npm run webhook:cleanup` - 期限切れWebhookをクリーンアップ
+
 ## 1. データベースマイグレーション
 
 まず、必要なテーブルを作成します。
@@ -230,7 +254,19 @@ NEXT_PUBLIC_BASE_URL=https://lastwar.example.com
 2. アプリケーションをデプロイ
 
 3. Webhookを登録:
+
+**方法1: サーバーサイドスクリプト（推奨）**
 ```bash
+# サーバーにSSHログイン後、プロジェクトディレクトリで実行
+npm run webhook:register https://jfkh.add3.cloud/api/webhooks/google-calendar
+
+# または直接実行
+tsx scripts/register-webhook.ts register https://jfkh.add3.cloud/api/webhooks/google-calendar
+```
+
+**方法2: API経由（認証が必要）**
+```bash
+# ブラウザでログイン後、セッションCookieを取得して実行
 curl -X POST https://lastwar.example.com/api/sync/webhook \
   -H "Content-Type: application/json" \
   -H "Cookie: session=your-session-cookie" \
@@ -242,6 +278,10 @@ curl -X POST https://lastwar.example.com/api/sync/webhook \
 
 4. 登録結果を確認:
 ```bash
+# サーバーサイドスクリプト
+npm run webhook:status
+
+# または API経由
 curl https://lastwar.example.com/api/sync/webhook \
   -H "Cookie: session=your-session-cookie"
 ```
@@ -250,6 +290,16 @@ curl https://lastwar.example.com/api/sync/webhook \
 
 Webhookは最大7日間有効です。期限切れ前に更新する必要があります:
 
+**方法1: サーバーサイドスクリプト（推奨）**
+```bash
+# Webhookを更新
+npm run webhook:renew https://jfkh.add3.cloud/api/webhooks/google-calendar
+
+# または直接実行
+tsx scripts/register-webhook.ts renew https://jfkh.add3.cloud/api/webhooks/google-calendar
+```
+
+**方法2: API経由**
 ```bash
 # 期限が近いWebhookを自動更新
 curl -X POST https://lastwar.example.com/api/sync/webhook \
@@ -261,9 +311,12 @@ curl -X POST https://lastwar.example.com/api/sync/webhook \
   }'
 ```
 
-推奨: cron で毎日自動更新を実行:
+**推奨: cron で毎日自動更新を実行**
+
+crontabに以下を追加（プロジェクトディレクトリへの絶対パスを使用）:
 ```bash
-0 2 * * * curl -X POST https://lastwar.example.com/api/sync/webhook ...
+# 毎日2時にWebhookを更新（必要な場合のみ）
+0 2 * * * cd /path/to/lastwar && npm run webhook:renew https://jfkh.add3.cloud/api/webhooks/google-calendar >> /var/log/webhook-renew.log 2>&1
 ```
 
 ## 6. 開発環境での注意事項
