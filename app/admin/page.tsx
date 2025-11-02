@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import AdminCalendar from '@/components/AdminCalendar';
 
 interface Event {
   id: number;
@@ -123,41 +124,18 @@ export default function AdminPage() {
       </div>
 
       <div className="container mx-auto px-4 py-4 sm:py-8">
-        {/* Googleカレンダー埋め込み */}
-        <div className="mb-6 bg-white rounded-lg shadow-lg p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-            <h2 className="text-xl font-bold">Googleカレンダー</h2>
+        {/* カレンダービュー */}
+        <div className="mb-6">
+          <div className="mb-4 flex justify-end">
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition text-sm sm:text-base disabled:bg-gray-400"
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition disabled:bg-gray-400"
             >
-              {syncing ? '同期中...' : '🔄 カレンダーから同期'}
+              {syncing ? '同期中...' : '🔄 Googleカレンダーから同期'}
             </button>
           </div>
-          <p className="text-sm text-gray-600 mb-4">
-            カレンダー上でイベントを作成・編集し、「カレンダーから同期」ボタンを押してください。<br/>
-            <span className="font-medium">タイトル形式:</span> 「イベント名 (砂漠A)」「イベント名 (狭間B)」など<br/>
-            <span className="text-xs text-orange-600">※カレンダーを編集するにはGoogleアカウントでログインしてください</span>
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <a
-              href={`https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID || '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
-            >
-              📅 Googleカレンダーで開く（編集可能）
-            </a>
-          </div>
-          <div className="w-full h-[600px] border rounded-lg overflow-hidden">
-            <iframe
-              src={`https://calendar.google.com/calendar/embed?src=${encodeURIComponent(process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID || '')}&ctz=Asia/Tokyo&mode=MONTH`}
-              className="w-full h-full"
-              frameBorder="0"
-              scrolling="yes"
-            />
-          </div>
+          <AdminCalendar events={events} onEventsChange={fetchEvents} />
         </div>
 
         {/* 旧イベント作成フォーム（コメントアウト） */}

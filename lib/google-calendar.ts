@@ -250,6 +250,76 @@ export async function createCalendarEvent(params: {
   }
 }
 
+// Googleカレンダーのイベントを更新
+export async function updateCalendarEvent(params: {
+  googleEventId: string;
+  title: string;
+  eventType: 'desert' | 'gap';
+  team: 'A' | 'B';
+  eventDate: string; // ISO 8601形式
+  description?: string;
+}) {
+  try {
+    const calendar = getCalendarClient(false); // 書き込み権限
+    const calendarId = process.env.GOOGLE_CALENDAR_ID;
+
+    if (!calendarId) {
+      throw new Error('GOOGLE_CALENDAR_ID is not set');
+    }
+
+    // datetime-local形式（例: "2025-11-26T21:57"）を正しいISO 8601形式に変換
+    let startDateTime = params.eventDate;
+    if (!startDateTime.includes(':00') || startDateTime.length < 19) {
+      // 秒が含まれていない場合は追加
+      startDateTime = startDateTime.includes('T') ? `${startDateTime}:00` : startDateTime;
+    }
+
+    // 開始時刻と終了時刻（30分後）を計算
+    const startDate = new Date(startDateTime);
+    const endDate = new Date(startDate.getTime() + 30 * 60 * 1000); // 30分後
+
+    // RFC 3339形式に変換（Googleカレンダーが要求する形式）
+    const formatToRFC3339 = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    };
+
+    const event = {
+      summary: params.title,
+      description: params.description || '',
+      start: {
+        dateTime: formatToRFC3339(startDate),
+        timeZone: 'Asia/Tokyo',
+      },
+      end: {
+        dateTime: formatToRFC3339(endDate),
+        timeZone: 'Asia/Tokyo',
+      },
+    };
+
+    const response = await calendar.events.update({
+      calendarId,
+      eventId: params.googleEventId,
+      requestBody: event,
+    });
+
+    console.log(`Updated event in Google Calendar: ${response.data.id}`);
+
+    return {
+      googleEventId: response.data.id,
+      htmlLink: response.data.htmlLink,
+    };
+  } catch (error) {
+    console.error('Failed to update calendar event:', error);
+    throw error;
+  }
+}
+
 // Googleカレンダーからイベントを削除
 export async function deleteCalendarEvent(googleEventId: string) {
   try {
