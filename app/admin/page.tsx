@@ -18,6 +18,8 @@ export default function AdminPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     event_type: 'desert-a',
@@ -25,8 +27,33 @@ export default function AdminPage() {
   });
 
   useEffect(() => {
-    fetchEvents();
+    // sessionStorageから認証状態を確認
+    const adminAuth = sessionStorage.getItem('adminAuth');
+    if (adminAuth === 'true') {
+      setIsAuthenticated(true);
+      fetchEvents();
+    }
   }, []);
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // 簡易パスワード認証（環境変数と照合）
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
+    if (password === correctPassword) {
+      sessionStorage.setItem('adminAuth', 'true');
+      setIsAuthenticated(true);
+      fetchEvents();
+    } else {
+      alert('パスワードが正しくありません');
+      setPassword('');
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('adminAuth');
+    setIsAuthenticated(false);
+    setPassword('');
+  };
 
   const fetchEvents = async () => {
     try {
@@ -106,15 +133,61 @@ export default function AdminPage() {
     }
   };
 
+  // 認証されていない場合はログインフォームを表示
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
+          <h1 className="text-2xl font-bold text-purple-600 mb-6 text-center">管理画面ログイン</h1>
+          <form onSubmit={handlePasswordSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                パスワード
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg text-gray-900"
+                placeholder="パスワードを入力してください"
+                required
+                autoFocus
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition"
+            >
+              ログイン
+            </button>
+            <div className="mt-4 text-center">
+              <Link href="/" className="text-sm text-blue-600 hover:underline">
+                ← トップに戻る
+              </Link>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold text-purple-600">管理画面</h1>
-            <Link href="/" className="text-sm sm:text-base text-blue-600 hover:underline">
-              ← トップに戻る
-            </Link>
+            <div className="flex gap-2">
+              <button
+                onClick={handleLogout}
+                className="text-sm sm:text-base text-red-600 hover:underline"
+              >
+                ログアウト
+              </button>
+              <Link href="/" className="text-sm sm:text-base text-blue-600 hover:underline">
+                ← トップに戻る
+              </Link>
+            </div>
           </div>
         </div>
       </div>
