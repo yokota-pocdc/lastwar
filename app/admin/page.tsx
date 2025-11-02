@@ -137,14 +137,25 @@ export default function AdminPage() {
           </div>
           <p className="text-sm text-gray-600 mb-4">
             カレンダー上でイベントを作成・編集し、「カレンダーから同期」ボタンを押してください。<br/>
-            <span className="font-medium">タイトル形式:</span> 「イベント名 (砂漠A)」「イベント名 (狭間B)」など
+            <span className="font-medium">タイトル形式:</span> 「イベント名 (砂漠A)」「イベント名 (狭間B)」など<br/>
+            <span className="text-xs text-orange-600">※カレンダーを編集するにはGoogleアカウントでログインしてください</span>
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <a
+              href={`https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID || '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+            >
+              📅 Googleカレンダーで開く（編集可能）
+            </a>
+          </div>
           <div className="w-full h-[600px] border rounded-lg overflow-hidden">
             <iframe
-              src={`https://calendar.google.com/calendar/embed?src=${encodeURIComponent(process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID || '')}&ctz=Asia/Tokyo&mode=WEEK`}
+              src={`https://calendar.google.com/calendar/embed?src=${encodeURIComponent(process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID || '')}&ctz=Asia/Tokyo&mode=MONTH`}
               className="w-full h-full"
               frameBorder="0"
-              scrolling="no"
+              scrolling="yes"
             />
           </div>
         </div>
