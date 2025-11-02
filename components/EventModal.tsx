@@ -66,6 +66,31 @@ export default function EventModal({ event, onClose }: EventModalProps) {
     setShowDiceRoller(false);
   };
 
+  const handleCancelApplication = async () => {
+    if (!application) return;
+
+    if (!confirm('申し込みを取り消しますか？\n\n※この週のサイコロスコアは保持されるため、同じ週の別のイベントに申し込む場合は同じスコアが使用されます。')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/applications/${application.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        alert('申し込みを取り消しました');
+        setApplication(null);
+      } else {
+        const data = await res.json();
+        alert(data.error || '取り消しに失敗しました');
+      }
+    } catch (error) {
+      console.error('Failed to cancel application:', error);
+      alert('エラーが発生しました');
+    }
+  };
+
   const getStatusBadge = (status?: string) => {
     if (!status) return null;
 
@@ -235,7 +260,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
                   </div>
                 )}
 
-                {!application.rerolled && event.status === 'open' && (
+                {!application.rerolled && event.status === 'open' && !event.lottery_executed && (
                   <button
                     onClick={() => setShowDiceRoller(true)}
                     className="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg transition"
@@ -245,9 +270,18 @@ export default function EventModal({ event, onClose }: EventModalProps) {
                 )}
 
                 {application.rerolled && (
-                  <div className="text-sm text-gray-500 text-center">
+                  <div className="text-sm text-gray-500 text-center mt-4">
                     既に振り直し済みです
                   </div>
+                )}
+
+                {event.status === 'open' && !event.lottery_executed && (
+                  <button
+                    onClick={handleCancelApplication}
+                    className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition"
+                  >
+                    ❌ 申し込みを取り消す
+                  </button>
                 )}
               </div>
             </div>
@@ -287,6 +321,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
               eventId={event.id}
               applicationId={application?.id}
               selectedTeam={application?.preferred_team || event.team}
+              eventDate={event.event_date}
               onComplete={handleApplicationComplete}
               onCancel={() => setShowDiceRoller(false)}
             />

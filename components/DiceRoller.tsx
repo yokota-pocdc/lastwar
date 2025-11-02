@@ -6,18 +6,22 @@ interface DiceRollerProps {
   eventId: number;
   applicationId?: number;
   selectedTeam: 'A' | 'B';
+  eventDate: string;
   onComplete: (application: any) => void;
   onCancel: () => void;
 }
 
-export default function DiceRoller({ eventId, applicationId, selectedTeam, onComplete, onCancel }: DiceRollerProps) {
+export default function DiceRoller({ eventId, applicationId, selectedTeam, eventDate, onComplete, onCancel }: DiceRollerProps) {
   const [tickets, setTickets] = useState(0);
   const [useTicket, setUseTicket] = useState(false);
   const [rolling, setRolling] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [weeklyDice, setWeeklyDice] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchTickets();
+    fetchWeeklyDice();
   }, []);
 
   const fetchTickets = async () => {
@@ -29,6 +33,20 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
       }
     } catch (error) {
       console.error('Failed to fetch tickets:', error);
+    }
+  };
+
+  const fetchWeeklyDice = async () => {
+    try {
+      const res = await fetch(`/api/weekly-dice?eventDate=${encodeURIComponent(eventDate)}`);
+      const data = await res.json();
+      if (res.ok) {
+        setWeeklyDice(data.weeklyDice);
+      }
+    } catch (error) {
+      console.error('Failed to fetch weekly dice:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,17 +139,42 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg p-8 max-w-md w-full">
-        {!rolling && !result && (
+        {loading ? (
+          <div className="text-center py-8">読み込み中...</div>
+        ) : !rolling && !result && (
           <>
             <h3 className="text-2xl font-bold mb-4 text-center">
-              {applicationId ? 'サイコロ振り直し' : 'サイコロを振る'}
+              {applicationId ? 'サイコロ振り直し' : weeklyDice ? 'この週のサイコロ' : 'サイコロを振る'}
             </h3>
 
             <div className="mb-4 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg text-center">
               <span className="font-bold text-gray-900">チーム{selectedTeam}に申し込みます</span>
             </div>
 
-            {!applicationId && tickets > 0 && (
+            {weeklyDice && !applicationId && (
+              <div className="mb-4 bg-yellow-50 border-2 border-yellow-400 p-4 rounded-lg">
+                <div className="text-center mb-3">
+                  <div className="text-sm text-gray-700 mb-2">この週は既にサイコロを振っています</div>
+                  <div className="flex justify-center gap-4 mb-2">
+                    <div className="w-20 h-20 bg-white rounded-lg shadow-lg border-2 border-gray-800 flex items-center justify-center">
+                      {renderDots(weeklyDice.dice1)}
+                    </div>
+                    <div className="w-20 h-20 bg-white rounded-lg shadow-lg border-2 border-gray-800 flex items-center justify-center">
+                      {renderDots(weeklyDice.dice2)}
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-gray-900">
+                    合計: {weeklyDice.total_score}点
+                    {weeklyDice.used_ticket === 1 && ' (チケット使用済み)'}
+                  </div>
+                </div>
+                <div className="text-xs text-gray-600 text-center">
+                  ※同じ週のイベントでは同じスコアが使用されます
+                </div>
+              </div>
+            )}
+
+            {!applicationId && tickets > 0 && !weeklyDice && (
               <div className="mb-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -155,7 +198,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, onCom
                 onClick={handleRoll}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition"
               >
-                🎲 振る
+                {weeklyDice && !applicationId ? '✅ このスコアで申し込む' : '🎲 振る'}
               </button>
               <button
                 onClick={onCancel}

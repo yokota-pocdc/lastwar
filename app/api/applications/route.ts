@@ -5,6 +5,7 @@ import { rollDice, calculateTotalScore } from '@/lib/lottery';
 import { getRemainingTickets, useTicket } from '@/lib/tickets';
 import { updateRealtimeRankings, getUserRanking } from '@/lib/realtime-lottery';
 import { autoUpdateEventStatus, isEventOpen } from '@/lib/auto-lottery';
+import { getWeeklyDiceByEventDate, saveWeeklyDiceByEventDate } from '@/lib/weekly-dice';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,19 +63,61 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // サイコロを振る
-    const { dice1, dice2, score: diceScore, isDoubles } = rollDice();
-
-    // チケット処理
+    // 週単位のサイコロを確認（既にこの週に振っていたら再利用）
+    let dice1: number;
+    let dice2: number;
+    let diceScore: number;
+    let isDoubles: boolean;
     let usedTicket = false;
-    if (wantsTicket) {
-      usedTicket = useTicket(session.userId);
-      if (!usedTicket) {
-        return NextResponse.json({ error: 'チケットが不足しています' }, { status: 400 });
-      }
-    }
+    let totalScore: number;
 
-    const totalScore = calculateTotalScore(diceScore, usedTicket);
+    const weeklyDice = getWeeklyDiceByEventDate(session.userId, event.event_date);
+
+    if (weeklyDice) {
+      // 既にこの週のサイコロがある場合は再利用
+      dice1 = weeklyDice.dice1;
+      dice2 = weeklyDice.dice2;
+      diceScore = weeklyDice.dice_score;
+      isDoubles = weeklyDice.is_doubles === 1;
+      usedTicket = weeklyDice.used_ticket === 1;
+      totalScore = weeklyDice.total_score;
+
+      // チケット使用要求があっても既に使用済みの場合はエラー
+      if (wantsTicket && !usedTicket) {
+        return NextResponse.json({
+          error: 'この週のサイコロは既に振られています。チケットの使用状態は変更できません。'
+        }, { status: 400 });
+      }
+    } else {
+      // 新規にサイコロを振る
+      const diceResult = rollDice();
+      dice1 = diceResult.dice1;
+      dice2 = diceResult.dice2;
+      diceScore = diceResult.score;
+      isDoubles = diceResult.isDoubles;
+
+      // チケット処理
+      if (wantsTicket) {
+        usedTicket = useTicket(session.userId);
+        if (!usedTicket) {
+          return NextResponse.json({ error: 'チケットが不足しています' }, { status: 400 });
+        }
+      }
+
+      totalScore = calculateTotalScore(diceScore, usedTicket);
+
+      // 週単位のサイコロを保存
+      saveWeeklyDiceByEventDate({
+        userId: session.userId,
+        eventDate: event.event_date,
+        dice1,
+        dice2,
+        diceScore,
+        isDoubles,
+        usedTicket,
+        totalScore,
+      });
+    }
 
     // 申込作成
     const result = db.prepare(`
