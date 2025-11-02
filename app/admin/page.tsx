@@ -95,9 +95,18 @@ export default function AdminPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('本当に削除しますか?')) return;
-
+    // 申込者数を確認
     try {
+      const checkRes = await fetch(`/api/events/${id}`);
+      const checkData = await checkRes.json();
+
+      let confirmMessage = '本当に削除しますか?';
+      if (checkData.applicationsCount > 0) {
+        confirmMessage = `このイベントには${checkData.applicationsCount}件の申し込みがあります。\n削除すると申し込みデータもすべて削除されます。\n本当に削除しますか?`;
+      }
+
+      if (!confirm(confirmMessage)) return;
+
       const res = await fetch(`/api/events/${id}`, {
         method: 'DELETE',
       });

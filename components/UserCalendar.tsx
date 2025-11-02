@@ -108,6 +108,20 @@ export default function UserCalendar({ events, appliedEventIds, onEventsChange }
     };
   };
 
+  // Custom event component to show "申込済" label
+  const EventComponent = ({ event }: { event: CalendarEvent }) => {
+    return (
+      <div className="flex items-center justify-between h-full px-1">
+        <span className="truncate flex-1">{event.title}</span>
+        {event.hasApplied && (
+          <span className="ml-1 bg-green-500 text-white text-xs px-1 rounded whitespace-nowrap">
+            申込済
+          </span>
+        )}
+      </div>
+    );
+  };
+
   // Handle event selection (show modal for application)
   const handleSelectEvent = useCallback((calEvent: CalendarEvent) => {
     const fullEvent = events.find(e => e.id === calEvent.id);
@@ -154,6 +168,9 @@ export default function UserCalendar({ events, appliedEventIds, onEventsChange }
           onSelectEvent={handleSelectEvent}
           selectable={false}
           eventPropGetter={eventStyleGetter}
+          components={{
+            event: EventComponent,
+          }}
           view={view}
           onView={setView}
           defaultView="month"
