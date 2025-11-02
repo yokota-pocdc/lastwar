@@ -86,9 +86,9 @@ export async function fetchCalendarEvents() {
       throw new Error('GOOGLE_CALENDAR_ID is not set');
     }
 
-    // 今日から30日後までのイベントを取得
+    // 今日から120日後（約4ヶ月）までのイベントを取得
     const now = new Date();
-    const endDate = addDays(now, 30);
+    const endDate = addDays(now, 120);
 
     const response = await calendar.events.list({
       calendarId,
