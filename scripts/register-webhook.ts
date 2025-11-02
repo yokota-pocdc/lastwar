@@ -10,6 +10,13 @@
  *   tsx scripts/register-webhook.ts cleanup
  */
 
+import { config } from 'dotenv';
+import * as path from 'path';
+
+// .env.localファイルを読み込む
+const projectRoot = process.cwd();
+config({ path: path.join(projectRoot, '.env.local') });
+
 import {
   registerWebhook,
   getActiveWebhooks,
