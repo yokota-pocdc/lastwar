@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminCalendar from '@/components/AdminCalendar';
+import SyncManagement from '@/components/SyncManagement';
 
 interface Event {
   id: number;
@@ -214,6 +215,11 @@ export default function AdminPage() {
             </button>
           </div>
           <AdminCalendar events={events} onEventsChange={fetchEvents} />
+        </div>
+
+        {/* 同期管理 */}
+        <div className="mb-6">
+          <SyncManagement />
         </div>
 
         {/* 旧イベント作成フォーム（コメントアウト） */}
