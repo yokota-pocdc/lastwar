@@ -51,7 +51,6 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        alert('イベントを作成しました');
         setShowCreateForm(false);
         setFormData({
           title: '',
@@ -77,7 +76,6 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        alert('削除しました');
         fetchEvents();
       } else {
         const data = await res.json();
@@ -96,8 +94,6 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        alert(`${data.syncedCount}件のイベントを同期しました`);
         fetchEvents();
       } else {
         const data = await res.json();

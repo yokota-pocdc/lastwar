@@ -138,7 +138,6 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
         });
 
         if (res.ok) {
-          alert('イベントを更新しました');
           setShowModal(false);
           onEventsChange();
         } else {
@@ -154,7 +153,6 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
         });
 
         if (res.ok) {
-          alert('イベントを作成しました');
           setShowModal(false);
           onEventsChange();
         } else {
@@ -178,7 +176,6 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
       });
 
       if (res.ok) {
-        alert('削除しました');
         setShowModal(false);
         onEventsChange();
       } else {
