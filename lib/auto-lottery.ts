@@ -1,14 +1,30 @@
 import db from './db';
 import { executeLottery, Application } from './lottery';
+import { startOfWeek, addDays } from 'date-fns';
 
 /**
- * イベントの締め切り日時を計算（開始日時の前日0時）
+ * イベントの締め切り日時を計算（連盟ルール）
+ * - 砂漠の戦場: 水曜日 11:00
+ * - 狭間の戦場: 月曜日 11:00
  */
-export function getDeadline(eventDate: string): Date {
+export function getDeadline(eventDate: string, eventType: 'desert' | 'gap'): Date {
   const eventDateTime = new Date(eventDate);
-  const deadline = new Date(eventDateTime);
-  deadline.setDate(deadline.getDate() - 1); // 前日
-  deadline.setHours(0, 0, 0, 0); // 0時に設定
+
+  // イベントが属する週の月曜日0時を取得
+  const weekStart = startOfWeek(eventDateTime, { weekStartsOn: 1 }); // 月曜始まり
+
+  let deadline: Date;
+
+  if (eventType === 'desert') {
+    // 砂漠: 水曜日 11:00（月曜 + 2日）
+    deadline = addDays(weekStart, 2);
+    deadline.setHours(11, 0, 0, 0);
+  } else {
+    // 狭間: 月曜日 11:00
+    deadline = new Date(weekStart);
+    deadline.setHours(11, 0, 0, 0);
+  }
+
   return deadline;
 }
 
@@ -24,7 +40,7 @@ export function autoUpdateEventStatus(): void {
   `).all() as any[];
 
   for (const event of openEvents) {
-    const deadline = getDeadline(event.event_date);
+    const deadline = getDeadline(event.event_date, event.event_type);
 
     // 締め切り時刻を過ぎている場合
     if (now >= deadline) {
@@ -79,12 +95,16 @@ function autoExecuteLottery(eventId: number): void {
   }
 
   // 抽選実行
+  // 参加者20名 + 候補者10名 = 合計30名
+  const totalCapacity = 30;      // 総枠（参加者+候補者）
+  const participantsOnly = 20;   // 参加者枠のみ
+
   const results = executeLottery(
     applications,
-    event.capacity || 30,        // デフォルト30人
-    event.capacity || 30,
-    event.participants_limit || 20,  // デフォルト20人
-    event.participants_limit || 20,
+    totalCapacity,           // チームA総枠: 30名
+    totalCapacity,           // チームB総枠: 30名
+    participantsOnly,        // チームA参加者: 20名（残り10名は候補者）
+    participantsOnly,        // チームB参加者: 20名（残り10名は候補者）
     true  // 常に2チーム編成
   );
 
@@ -112,13 +132,13 @@ function autoExecuteLottery(eventId: number): void {
 /**
  * イベントが申込可能かどうかをチェック
  */
-export function isEventOpen(eventDate: string, status: string, lotteryExecuted: boolean): boolean {
+export function isEventOpen(eventDate: string, eventType: 'desert' | 'gap', status: string, lotteryExecuted: boolean): boolean {
   if (status !== 'open' || lotteryExecuted) {
     return false;
   }
 
   const now = new Date();
-  const deadline = getDeadline(eventDate);
+  const deadline = getDeadline(eventDate, eventType);
 
   return now < deadline;
 }

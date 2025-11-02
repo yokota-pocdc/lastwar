@@ -28,8 +28,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 締め切り時刻チェック
-    if (!isEventOpen(event.event_date, event.status, event.lottery_executed)) {
-      return NextResponse.json({ error: 'このイベントは受付終了しています（開始日の前日0時まで）' }, { status: 400 });
+    if (!isEventOpen(event.event_date, event.event_type, event.status, event.lottery_executed)) {
+      const deadlineInfo = event.event_type === 'desert' ? '水曜日11:00' : '月曜日11:00';
+      return NextResponse.json({
+        error: `このイベントは受付終了しています（締切: ${deadlineInfo}）`
+      }, { status: 400 });
     }
 
     // 既に申込済みか確認

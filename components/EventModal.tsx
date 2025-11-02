@@ -123,17 +123,35 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             <p className="text-sm text-orange-600 font-medium">
               ⏰ 申込締切: {(() => {
                 const eventDate = new Date(event.event_date);
-                const deadline = new Date(eventDate);
-                deadline.setDate(deadline.getDate() - 1);
-                deadline.setHours(0, 0, 0, 0);
+                // 連盟ルール: イベント週の月曜日0時を基準とする
+                const eventDateTime = new Date(eventDate);
+                const dayOfWeek = eventDateTime.getDay();
+                const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+                const weekStart = new Date(eventDateTime);
+                weekStart.setDate(weekStart.getDate() + daysToMonday);
+                weekStart.setHours(0, 0, 0, 0);
+
+                let deadline: Date;
+                if (event.event_type === 'desert') {
+                  // 砂漠: 水曜日 11:00（月曜 + 2日）
+                  deadline = new Date(weekStart);
+                  deadline.setDate(deadline.getDate() + 2);
+                  deadline.setHours(11, 0, 0, 0);
+                } else {
+                  // 狭間: 月曜日 11:00
+                  deadline = new Date(weekStart);
+                  deadline.setHours(11, 0, 0, 0);
+                }
+
                 return deadline.toLocaleString('ja-JP', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
+                  weekday: 'long',
                   hour: '2-digit',
                   minute: '2-digit'
                 });
-              })()}（開始の前日0時）
+              })()}（連盟ルール: {event.event_type === 'desert' ? '水曜日11:00' : '月曜日11:00'}）
             </p>
           </div>
 
