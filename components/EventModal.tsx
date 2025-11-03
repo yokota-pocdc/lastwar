@@ -69,6 +69,8 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
     if (onRefresh) {
       onRefresh();
     }
+    // モーダルを閉じる
+    onClose();
   };
 
   const handleCancelApplication = async () => {
@@ -84,12 +86,13 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
       });
 
       if (res.ok) {
-        alert('申し込みを取り消しました');
         setApplication(null);
         // 親コンポーネントに変更を通知
         if (onRefresh) {
           onRefresh();
         }
+        // モーダルを閉じる
+        onClose();
       } else {
         const data = await res.json();
         alert(data.error || '取り消しに失敗しました');
