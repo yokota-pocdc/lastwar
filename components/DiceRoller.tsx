@@ -387,8 +387,8 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
         /* 結果表示用の回転角度 */
         .dice.show-1 { transform: rotateX(0deg) rotateY(0deg); }
         .dice.show-2 { transform: rotateX(-90deg) rotateY(0deg); }
-        .dice.show-3 { transform: rotateX(0deg) rotateY(90deg); }
-        .dice.show-4 { transform: rotateX(0deg) rotateY(-90deg); }
+        .dice.show-3 { transform: rotateX(0deg) rotateY(-90deg); }
+        .dice.show-4 { transform: rotateX(0deg) rotateY(90deg); }
         .dice.show-5 { transform: rotateX(90deg) rotateY(0deg); }
         .dice.show-6 { transform: rotateX(0deg) rotateY(180deg); }
       `}</style>
