@@ -77,11 +77,32 @@ export function initializeDatabase() {
     )
   `);
 
+  // 週単位のサイコロ履歴テーブル
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_dice_weekly (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      year INTEGER NOT NULL,
+      week INTEGER NOT NULL,
+      dice1 INTEGER NOT NULL,
+      dice2 INTEGER NOT NULL,
+      dice_score INTEGER NOT NULL,
+      is_doubles INTEGER DEFAULT 0,
+      used_ticket INTEGER DEFAULT 0,
+      total_score INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, year, week),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `);
+
   // インデックス作成
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date);
     CREATE INDEX IF NOT EXISTS idx_applications_event ON applications(event_id);
     CREATE INDEX IF NOT EXISTS idx_applications_user ON applications(user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_dice_weekly_user_year_week ON user_dice_weekly(user_id, year, week);
   `);
 
   console.log('Database initialized successfully');
