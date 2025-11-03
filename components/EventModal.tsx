@@ -32,9 +32,10 @@ interface Application {
 interface EventModalProps {
   event: Event;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
-export default function EventModal({ event, onClose }: EventModalProps) {
+export default function EventModal({ event, onClose, onRefresh }: EventModalProps) {
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
@@ -64,6 +65,10 @@ export default function EventModal({ event, onClose }: EventModalProps) {
   const handleApplicationComplete = (newApplication: Application) => {
     setApplication(newApplication);
     setShowDiceRoller(false);
+    // 親コンポーネントに変更を通知
+    if (onRefresh) {
+      onRefresh();
+    }
   };
 
   const handleCancelApplication = async () => {
@@ -81,6 +86,10 @@ export default function EventModal({ event, onClose }: EventModalProps) {
       if (res.ok) {
         alert('申し込みを取り消しました');
         setApplication(null);
+        // 親コンポーネントに変更を通知
+        if (onRefresh) {
+          onRefresh();
+        }
       } else {
         const data = await res.json();
         alert(data.error || '取り消しに失敗しました');

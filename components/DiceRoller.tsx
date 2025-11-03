@@ -51,7 +51,12 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
   };
 
   const handleRoll = async () => {
-    setRolling(true);
+    // 既存サイコロがある場合（再エントリー）はアニメーションをスキップ
+    const skipAnimation = weeklyDice && !applicationId;
+
+    if (!skipAnimation) {
+      setRolling(true);
+    }
 
     try {
       if (applicationId) {
@@ -87,22 +92,31 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
         const data = await res.json();
 
         if (res.ok) {
-          // アニメーション時間（2秒）後に結果を表示
-          setTimeout(() => {
-            setResult({ application: data.application, improved: true });
+          if (skipAnimation) {
+            // 既存サイコロの場合はアニメーションなしで即座に完了
+            onComplete(data.application);
+          } else {
+            // 新規サイコロの場合はアニメーション付き
             setTimeout(() => {
-              onComplete(data.application);
+              setResult({ application: data.application, improved: true });
+              setTimeout(() => {
+                onComplete(data.application);
+              }, 2000);
             }, 2000);
-          }, 2000);
+          }
         } else {
           alert(data.error || '申込に失敗しました');
-          setRolling(false);
+          if (!skipAnimation) {
+            setRolling(false);
+          }
         }
       }
     } catch (error) {
       console.error('Roll failed:', error);
       alert('エラーが発生しました');
-      setRolling(false);
+      if (!skipAnimation) {
+        setRolling(false);
+      }
     }
   };
 

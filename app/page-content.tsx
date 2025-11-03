@@ -29,6 +29,7 @@ export default function PageContent() {
   const [events, setEvents] = useState<Event[]>([]);
   const [appliedEventIds, setAppliedEventIds] = useState<number[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     checkAuth();
@@ -102,6 +103,7 @@ export default function PageContent() {
   const handleEventsChange = () => {
     fetchEvents();
     fetchAppliedEvents();
+    setRefreshKey(prev => prev + 1); // WeeklyDashboardを更新
   };
 
   const handleEventClick = (event: Event) => {
@@ -138,6 +140,7 @@ export default function PageContent() {
           <WeeklyDashboard
             onEventClick={handleEventClick}
             onResultClick={handleResultClick}
+            refreshKey={refreshKey}
           />
 
           {/* カレンダービュー */}
@@ -157,6 +160,7 @@ export default function PageContent() {
         <EventModal
           event={selectedEvent}
           onClose={handleCloseModal}
+          onRefresh={handleEventsChange}
         />
       )}
     </div>

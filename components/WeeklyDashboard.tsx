@@ -27,9 +27,10 @@ interface Application {
 interface WeeklyDashboardProps {
   onEventClick: (event: Event) => void;
   onResultClick: (event: Event) => void;
+  refreshKey?: number;
 }
 
-export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyDashboardProps) {
+export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKey }: WeeklyDashboardProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [applicationsCount, setApplicationsCount] = useState<{ [key: number]: number }>({});
@@ -38,7 +39,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [refreshKey]);
 
   const fetchData = async () => {
     try {
@@ -94,13 +95,6 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
     const eventDate = new Date(event.event_date);
     return isWithinInterval(eventDate, { start: gapTargetWeek.start, end: gapTargetWeek.end });
   });
-
-  // デバッグログ
-  console.log('=== WeeklyDashboard Debug ===');
-  console.log('Total events:', events.length);
-  console.log('Desert events:', desertEvents.map(e => ({ id: e.id, title: e.title, date: e.event_date })));
-  console.log('Gap events:', gapEvents.map(e => ({ id: e.id, title: e.title, date: e.event_date })));
-  console.log('Applications:', applications.map(a => ({ id: a.id, event_id: a.event_id, result_status: a.result_status })));
 
   const desertA = desertEvents.find(e => e.team === 'A');
   const desertB = desertEvents.find(e => e.team === 'B');
