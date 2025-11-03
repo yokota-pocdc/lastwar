@@ -95,6 +95,13 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
     return isWithinInterval(eventDate, { start: gapTargetWeek.start, end: gapTargetWeek.end });
   });
 
+  // デバッグログ
+  console.log('=== WeeklyDashboard Debug ===');
+  console.log('Total events:', events.length);
+  console.log('Desert events:', desertEvents.map(e => ({ id: e.id, title: e.title, date: e.event_date })));
+  console.log('Gap events:', gapEvents.map(e => ({ id: e.id, title: e.title, date: e.event_date })));
+  console.log('Applications:', applications.map(a => ({ id: a.id, event_id: a.event_id, result_status: a.result_status })));
+
   const desertA = desertEvents.find(e => e.team === 'A');
   const desertB = desertEvents.find(e => e.team === 'B');
   const gapA = gapEvents.find(e => e.team === 'A');
