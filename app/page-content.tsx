@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import UserCalendar from '@/components/UserCalendar';
 import LoginForm from '@/components/LoginForm';
 import Header from '@/components/Header';
+import WeeklyDashboard from '@/components/WeeklyDashboard';
+import EventModal from '@/components/EventModal';
 
 interface Event {
   id: number;
@@ -14,16 +16,19 @@ interface Event {
   event_date: string;
   status: 'open' | 'closed' | 'finished';
   event_group: string;
+  lottery_executed?: number;
   google_event_id?: string;
 }
 
 export default function PageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: number; name: string } | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [appliedEventIds, setAppliedEventIds] = useState<number[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -99,6 +104,19 @@ export default function PageContent() {
     fetchAppliedEvents();
   };
 
+  const handleEventClick = (event: Event) => {
+    setSelectedEvent(event);
+  };
+
+  const handleResultClick = (event: Event) => {
+    router.push(`/admin/results/${event.id}`);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedEvent(null);
+    handleEventsChange();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -115,12 +133,32 @@ export default function PageContent() {
     <div className="min-h-screen bg-gray-50">
       <Header user={user} />
       <main className="container mx-auto px-4 py-8">
-        <UserCalendar
-          events={events}
-          appliedEventIds={appliedEventIds}
-          onEventsChange={handleEventsChange}
-        />
+        <div className="space-y-8">
+          {/* 週次ダッシュボード */}
+          <WeeklyDashboard
+            onEventClick={handleEventClick}
+            onResultClick={handleResultClick}
+          />
+
+          {/* カレンダービュー */}
+          <div>
+            <h2 className="text-xl font-bold mb-4">📅 カレンダー</h2>
+            <UserCalendar
+              events={events}
+              appliedEventIds={appliedEventIds}
+              onEventsChange={handleEventsChange}
+            />
+          </div>
+        </div>
       </main>
+
+      {/* イベント詳細モーダル */}
+      {selectedEvent && (
+        <EventModal
+          event={selectedEvent}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 }

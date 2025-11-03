@@ -4,8 +4,8 @@ import { startOfWeek, addDays } from 'date-fns';
 
 /**
  * イベントの締め切り日時を計算（連盟ルール）
- * - 砂漠の戦場: 水曜日 11:00
- * - 狭間の戦場: 月曜日 11:00
+ * - 統一: 火曜日 23:59
+ * イベントが属する週の火曜日23:59が締め切り
  */
 export function getDeadline(eventDate: string, eventType: 'desert' | 'gap'): Date {
   const eventDateTime = new Date(eventDate);
@@ -13,17 +13,9 @@ export function getDeadline(eventDate: string, eventType: 'desert' | 'gap'): Dat
   // イベントが属する週の月曜日0時を取得
   const weekStart = startOfWeek(eventDateTime, { weekStartsOn: 1 }); // 月曜始まり
 
-  let deadline: Date;
-
-  if (eventType === 'desert') {
-    // 砂漠: 水曜日 11:00（月曜 + 2日）
-    deadline = addDays(weekStart, 2);
-    deadline.setHours(11, 0, 0, 0);
-  } else {
-    // 狭間: 月曜日 11:00
-    deadline = new Date(weekStart);
-    deadline.setHours(11, 0, 0, 0);
-  }
+  // 火曜日 23:59（月曜 + 1日）
+  const deadline = addDays(weekStart, 1);
+  deadline.setHours(23, 59, 59, 999);
 
   return deadline;
 }

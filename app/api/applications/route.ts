@@ -6,6 +6,7 @@ import { getRemainingTickets, useTicket } from '@/lib/tickets';
 import { updateRealtimeRankings, getUserRanking } from '@/lib/realtime-lottery';
 import { autoUpdateEventStatus, isEventOpen } from '@/lib/auto-lottery';
 import { getWeeklyDiceByEventDate, saveWeeklyDiceByEventDate } from '@/lib/weekly-dice';
+import { isEventThisWeek } from '@/lib/event-week';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,11 +29,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'イベントが見つかりません' }, { status: 404 });
     }
 
+    // 週のチェック（今週のイベントのみ申し込み可能）
+    if (!isEventThisWeek(event.event_date)) {
+      return NextResponse.json({
+        error: '申し込みは該当週のみ可能です（月曜11:00～月曜10:59）'
+      }, { status: 400 });
+    }
+
     // 締め切り時刻チェック
     if (!isEventOpen(event.event_date, event.event_type, event.status, event.lottery_executed)) {
-      const deadlineInfo = event.event_type === 'desert' ? '水曜日11:00' : '月曜日11:00';
       return NextResponse.json({
-        error: `このイベントは受付終了しています（締切: ${deadlineInfo}）`
+        error: 'このイベントは受付終了しています（締切: 火曜日23:59）'
       }, { status: 400 });
     }
 
