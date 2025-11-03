@@ -144,11 +144,11 @@ export default function AdminPage() {
   };
 
   const handleClearApplications = async () => {
-    const confirmMessage = '【警告】すべての申し込みデータを削除します。\nこの操作は取り消せません。\n本当に実行しますか？';
+    const confirmMessage = '【警告】すべてのユーザーデータを削除します。\n・申し込みデータ\n・ユーザー情報\n・セッション情報\n※イベントカレンダーは残ります\n※実行後は自動的にログアウトされます\n\nこの操作は取り消せません。\n本当に実行しますか？';
     if (!confirm(confirmMessage)) return;
 
     // 二重確認
-    const doubleConfirm = confirm('再確認：本当にすべての申し込みデータを削除しますか？\nイベントカレンダーは削除されませんが、申し込みデータはすべて削除されます。');
+    const doubleConfirm = confirm('再確認：本当にすべてのユーザーデータを削除しますか？\n管理者を含む全ユーザーが削除され、再ログインが必要になります。');
     if (!doubleConfirm) return;
 
     try {
@@ -157,8 +157,10 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        alert('すべての申し込みデータを削除しました');
-        fetchEvents();
+        alert('すべてのデータを削除しました。ログイン画面に戻ります。');
+        // セッションをクリアして、ログイン画面にリダイレクト
+        sessionStorage.removeItem('adminAuth');
+        window.location.href = '/';
       } else {
         const data = await res.json();
         alert(data.error || '削除に失敗しました');
@@ -235,7 +237,7 @@ export default function AdminPage() {
               onClick={handleClearApplications}
               className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition text-sm sm:text-base"
             >
-              🗑️ 申し込みデータを全削除
+              🗑️ 全データ削除（試験用）
             </button>
             <button
               onClick={handleSync}
