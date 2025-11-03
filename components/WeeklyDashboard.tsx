@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { format, startOfWeek, addDays } from 'date-fns';
+import { format, startOfWeek, addDays, isWithinInterval } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import EntryListModal from './EntryListModal';
+import { getCurrentEventWeek, getGapEventTargetWeek, isInEntryPeriod } from '@/lib/event-week';
 
 interface Event {
   id: number;
@@ -78,67 +79,32 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
     }
   };
 
-  // 今週のイベントをフィルター
-  const thisWeekEvents = events.filter(event => {
+  // 砂漠イベント：今週のイベント
+  const currentWeek = getCurrentEventWeek();
+  const desertEvents = events.filter(event => {
+    if (event.event_type !== 'desert') return false;
     const eventDate = new Date(event.event_date);
-    const now = new Date();
-
-    // 簡易的な週判定（月曜基準）
-    const eventWeekStart = new Date(eventDate);
-    eventWeekStart.setDate(eventDate.getDate() - ((eventDate.getDay() + 6) % 7));
-    eventWeekStart.setHours(11, 0, 0, 0);
-
-    const nowWeekStart = new Date(now);
-    nowWeekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    nowWeekStart.setHours(11, 0, 0, 0);
-
-    // 月曜11:00前の場合は前週扱い
-    if (now.getDay() === 1 && now.getHours() < 11) {
-      nowWeekStart.setDate(nowWeekStart.getDate() - 7);
-    }
-
-    return eventWeekStart.getTime() === nowWeekStart.getTime();
+    return isWithinInterval(eventDate, { start: currentWeek.start, end: currentWeek.end });
   });
 
-  // 砂漠・狭間別にグループ化
-  const desertEvents = thisWeekEvents.filter(e => e.event_type === 'desert');
-  const gapEvents = thisWeekEvents.filter(e => e.event_type === 'gap');
+  // 狭間イベント：土日エントリー期間中は来週、それ以外は今週
+  const gapTargetWeek = getGapEventTargetWeek();
+  const gapEvents = events.filter(event => {
+    if (event.event_type !== 'gap') return false;
+    const eventDate = new Date(event.event_date);
+    return isWithinInterval(eventDate, { start: gapTargetWeek.start, end: gapTargetWeek.end });
+  });
 
   const desertA = desertEvents.find(e => e.team === 'A');
   const desertB = desertEvents.find(e => e.team === 'B');
   const gapA = gapEvents.find(e => e.team === 'A');
   const gapB = gapEvents.find(e => e.team === 'B');
 
-  // 締め切り日時を計算
-  // - 砂漠: 火曜日 23:59:59
-  // - 狭間: 日曜日 23:59:59
-  const getDeadline = (eventDate: string, eventType: 'desert' | 'gap'): Date => {
-    const event = new Date(eventDate);
-    const dayOfWeek = event.getDay();
-    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const weekStart = new Date(event);
-    weekStart.setDate(event.getDate() + daysToMonday);
-    weekStart.setHours(0, 0, 0, 0);
-
-    if (eventType === 'gap') {
-      // 狭間: 日曜日 23:59:59（週の最後 = 月曜 + 6日）
-      const deadline = new Date(weekStart);
-      deadline.setDate(deadline.getDate() + 6);
-      deadline.setHours(23, 59, 59, 999);
-      return deadline;
-    } else {
-      // 砂漠: 火曜日 23:59:59（月曜 + 1日）
-      const deadline = new Date(weekStart);
-      deadline.setDate(deadline.getDate() + 1);
-      deadline.setHours(23, 59, 59, 999);
-      return deadline;
-    }
-  };
-
-  // 締め切りを過ぎているかチェック
-  const isDeadlinePassed = (eventDate: string, eventType: 'desert' | 'gap'): boolean => {
-    const deadline = getDeadline(eventDate, eventType);
-    return new Date() > deadline;
+  // エントリー期間チェック
+  // 砂漠：月曜11:00～火曜23:59
+  // 狭間：土曜11:00～日曜23:59
+  const isEntryOpen = (eventType: 'desert' | 'gap'): boolean => {
+    return isInEntryPeriod(eventType);
   };
 
   // 自分の申し込み状況を取得
@@ -157,12 +123,11 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
     gapEvents.some(e => e.id === app.event_id)
   );
 
-  // エントリー状況を判定（実際の締め切り日時で判定）
-  const getEntryStatus = (events: Event[]) => {
+  // エントリー状況を判定（エントリー期間で判定）
+  const getEntryStatus = (eventType: 'desert' | 'gap', events: Event[]) => {
     if (events.length === 0) return '未開催';
-    // いずれかのイベントの締め切りが過ぎていなければエントリー中
-    const hasOpen = events.some(e => !isDeadlinePassed(e.event_date, e.event_type as 'desert' | 'gap'));
-    if (hasOpen) return 'エントリー中';
+    // エントリー期間内なら「エントリー中」、それ以外は「締切済」
+    if (isEntryOpen(eventType)) return 'エントリー中';
     return '締切済';
   };
 
@@ -182,7 +147,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
 
     const eventDate = new Date(event.event_date);
     const count = applicationsCount[event.id] || 0;
-    const isClosed = isDeadlinePassed(event.event_date, event.event_type as 'desert' | 'gap');
+    const isClosed = !isEntryOpen(event.event_type);
     const myApp = getMyApplication(event.id);
 
     return (
@@ -260,10 +225,10 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
     return <div className="text-center py-8">読み込み中...</div>;
   }
 
-  if (thisWeekEvents.length === 0) {
+  if (desertEvents.length === 0 && gapEvents.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-6 text-center text-gray-500">
-        今週のイベントはありません
+        エントリー可能なイベントがありません
       </div>
     );
   }
@@ -274,8 +239,8 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-t-lg">
         <h2 className="text-2xl font-bold mb-2">今週のエントリー状況</h2>
         <div className="text-sm opacity-90">
-          <span className="mr-4">🏜️ 砂漠締切: 火曜23:59</span>
-          <span>⚔️ 狭間締切: 日曜23:59</span>
+          <div>🏜️ 砂漠: 月曜11:00～火曜23:59</div>
+          <div>⚔️ 狭間: 土曜11:00～日曜23:59（翌週イベント）</div>
         </div>
       </div>
 
@@ -286,13 +251,13 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-xl font-bold">🏜️ 砂漠の戦場</h3>
               <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                getEntryStatus(desertEvents) === 'エントリー中'
+                getEntryStatus('desert', desertEvents) === 'エントリー中'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {getEntryStatus(desertEvents)}
+                {getEntryStatus('desert', desertEvents)}
               </span>
-              {getEntryStatus(desertEvents) === 'エントリー中' && (
+              {getEntryStatus('desert', desertEvents) === 'エントリー中' && (
                 <button
                   onClick={() => setShowEntryList({
                     type: 'desert',
@@ -318,13 +283,13 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-xl font-bold">⚔️ 狭間の戦場</h3>
               <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                getEntryStatus(gapEvents) === 'エントリー中'
+                getEntryStatus('gap', gapEvents) === 'エントリー中'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {getEntryStatus(gapEvents)}
+                {getEntryStatus('gap', gapEvents)}
               </span>
-              {getEntryStatus(gapEvents) === 'エントリー中' && (
+              {getEntryStatus('gap', gapEvents) === 'エントリー中' && (
                 <button
                   onClick={() => setShowEntryList({
                     type: 'gap',
