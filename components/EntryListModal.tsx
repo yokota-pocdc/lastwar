@@ -39,8 +39,8 @@ export default function EntryListModal({ eventIds, eventType, onClose }: EntryLi
       for (const eventId of eventIds) {
         const res = await fetch(`/api/admin/results?eventId=${eventId}`);
         const data = await res.json();
-        if (res.ok && data.applications) {
-          allApplications.push(...data.applications);
+        if (res.ok && data.results) {
+          allApplications.push(...data.results);
         }
       }
 
