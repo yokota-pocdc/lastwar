@@ -149,7 +149,6 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             <p className="text-sm text-orange-600 font-medium">
               ⏰ 申込締切: {(() => {
                 const eventDate = new Date(event.event_date);
-                // 連盟ルール: イベント週の火曜日23:59
                 const eventDateTime = new Date(eventDate);
                 const dayOfWeek = eventDateTime.getDay();
                 const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -157,10 +156,19 @@ export default function EventModal({ event, onClose }: EventModalProps) {
                 weekStart.setDate(weekStart.getDate() + daysToMonday);
                 weekStart.setHours(0, 0, 0, 0);
 
-                // 火曜日 23:59（月曜 + 1日）
+                // イベントタイプに応じた締切
                 const deadline = new Date(weekStart);
-                deadline.setDate(deadline.getDate() + 1);
-                deadline.setHours(23, 59, 0, 0);
+                if (event.event_type === 'gap') {
+                  // 狭間: 日曜日 23:59（週の最後 = 月曜 + 6日）
+                  deadline.setDate(deadline.getDate() + 6);
+                  deadline.setHours(23, 59, 59, 999);
+                } else {
+                  // 砂漠: 火曜日 23:59（月曜 + 1日）
+                  deadline.setDate(deadline.getDate() + 1);
+                  deadline.setHours(23, 59, 59, 999);
+                }
+
+                const deadlineText = event.event_type === 'gap' ? '日曜日23:59' : '火曜日23:59';
 
                 return deadline.toLocaleString('ja-JP', {
                   year: 'numeric',
@@ -169,8 +177,8 @@ export default function EventModal({ event, onClose }: EventModalProps) {
                   weekday: 'long',
                   hour: '2-digit',
                   minute: '2-digit'
-                });
-              })()}（連盟ルール: 火曜日23:59）
+                }) + `（連盟ルール: ${deadlineText}）`;
+              })()}
             </p>
           </div>
 

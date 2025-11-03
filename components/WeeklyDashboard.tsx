@@ -32,7 +32,6 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
   const [events, setEvents] = useState<Event[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [applicationsCount, setApplicationsCount] = useState<{ [key: number]: number }>({});
-  const [deadline, setDeadline] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEntryList, setShowEntryList] = useState<{ type: 'desert' | 'gap', eventIds: number[] } | null>(null);
 
@@ -69,21 +68,8 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
         setApplications(appsData.applications || []);
       }
 
-      // 締切日時を計算（今週の火曜23:59）
-      const now = new Date();
-      const dayOfWeek = now.getDay();
-      const daysUntilTuesday = dayOfWeek === 0 ? 2 : (2 - dayOfWeek + 7) % 7;
-
-      let tuesday = new Date(now);
-      tuesday.setDate(now.getDate() + daysUntilTuesday);
-
-      // 月曜11:00前の場合は前週の火曜
-      if (dayOfWeek === 1 && now.getHours() < 11) {
-        tuesday.setDate(tuesday.getDate() - 7);
-      }
-
-      tuesday.setHours(23, 59, 59, 999);
-      setDeadline(tuesday);
+      // 締切日時は各戦場タイプで異なるため、セクション別に表示
+      // 砂漠: 火曜23:59、狭間: 日曜23:59
 
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -123,8 +109,10 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
   const gapA = gapEvents.find(e => e.team === 'A');
   const gapB = gapEvents.find(e => e.team === 'B');
 
-  // 締め切り日時を計算（火曜23:59）
-  const getDeadline = (eventDate: string): Date => {
+  // 締め切り日時を計算
+  // - 砂漠: 火曜日 23:59:59
+  // - 狭間: 日曜日 23:59:59
+  const getDeadline = (eventDate: string, eventType: 'desert' | 'gap'): Date => {
     const event = new Date(eventDate);
     const dayOfWeek = event.getDay();
     const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -132,17 +120,24 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
     weekStart.setDate(event.getDate() + daysToMonday);
     weekStart.setHours(0, 0, 0, 0);
 
-    // 火曜日 23:59
-    const deadline = new Date(weekStart);
-    deadline.setDate(deadline.getDate() + 1);
-    deadline.setHours(23, 59, 59, 999);
-
-    return deadline;
+    if (eventType === 'gap') {
+      // 狭間: 日曜日 23:59:59（週の最後 = 月曜 + 6日）
+      const deadline = new Date(weekStart);
+      deadline.setDate(deadline.getDate() + 6);
+      deadline.setHours(23, 59, 59, 999);
+      return deadline;
+    } else {
+      // 砂漠: 火曜日 23:59:59（月曜 + 1日）
+      const deadline = new Date(weekStart);
+      deadline.setDate(deadline.getDate() + 1);
+      deadline.setHours(23, 59, 59, 999);
+      return deadline;
+    }
   };
 
   // 締め切りを過ぎているかチェック
-  const isDeadlinePassed = (eventDate: string): boolean => {
-    const deadline = getDeadline(eventDate);
+  const isDeadlinePassed = (eventDate: string, eventType: 'desert' | 'gap'): boolean => {
+    const deadline = getDeadline(eventDate, eventType);
     return new Date() > deadline;
   };
 
@@ -166,7 +161,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
   const getEntryStatus = (events: Event[]) => {
     if (events.length === 0) return '未開催';
     // いずれかのイベントの締め切りが過ぎていなければエントリー中
-    const hasOpen = events.some(e => !isDeadlinePassed(e.event_date));
+    const hasOpen = events.some(e => !isDeadlinePassed(e.event_date, e.event_type as 'desert' | 'gap'));
     if (hasOpen) return 'エントリー中';
     return '締切済';
   };
@@ -187,7 +182,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
 
     const eventDate = new Date(event.event_date);
     const count = applicationsCount[event.id] || 0;
-    const isClosed = isDeadlinePassed(event.event_date);
+    const isClosed = isDeadlinePassed(event.event_date, event.event_type as 'desert' | 'gap');
     const myApp = getMyApplication(event.id);
 
     return (
@@ -278,11 +273,10 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
       {/* ヘッダー */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-t-lg">
         <h2 className="text-2xl font-bold mb-2">今週のエントリー状況</h2>
-        {deadline && (
-          <div className="text-sm opacity-90">
-            締切日時: {format(deadline, 'yyyy年M月d日(E) HH:mm', { locale: ja })}
-          </div>
-        )}
+        <div className="text-sm opacity-90">
+          <span className="mr-4">🏜️ 砂漠締切: 火曜23:59</span>
+          <span>⚔️ 狭間締切: 日曜23:59</span>
+        </div>
       </div>
 
       <div className="p-6 space-y-6">
