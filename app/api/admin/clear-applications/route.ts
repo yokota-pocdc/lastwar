@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,10 @@ export async function POST(request: NextRequest) {
     });
 
     transaction();
+
+    // セッションcookieを削除
+    const cookieStore = await cookies();
+    cookieStore.delete('lastwar_lottery_session');
 
     return NextResponse.json({
       success: true,

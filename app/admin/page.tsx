@@ -158,8 +158,12 @@ export default function AdminPage() {
 
       if (res.ok) {
         alert('すべてのデータを削除しました。\n\n次の手順：\n1. Googleカレンダーから同期してイベントを復元\n2. ユーザー新規登録でテスト開始\n\nログイン画面に戻ります。');
-        // セッションをクリアして、ログイン画面にリダイレクト
+        // セッションとcookieをクリア
         sessionStorage.removeItem('adminAuth');
+        // すべてのcookieを削除
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
         window.location.href = '/';
       } else {
         const data = await res.json();
