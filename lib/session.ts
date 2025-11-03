@@ -8,7 +8,7 @@ export interface SessionData {
 
 const sessionOptions = {
   password: process.env.SESSION_SECRET || 'complex_password_at_least_32_characters_long_for_security',
-  cookieName: 'lastwar_lottery_session',
+  cookieName: 'jfkh_event_session',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 365, // 1年間

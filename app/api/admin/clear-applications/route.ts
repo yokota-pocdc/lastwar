@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // セッションcookieを削除
     const cookieStore = await cookies();
-    cookieStore.delete('lastwar_lottery_session');
+    cookieStore.delete('jfkh_event_session');
 
     return NextResponse.json({
       success: true,
