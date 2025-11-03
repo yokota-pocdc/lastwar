@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, startOfWeek, addDays } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import EntryListModal from './EntryListModal';
 
 interface Event {
   id: number;
@@ -33,6 +34,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
   const [applicationsCount, setApplicationsCount] = useState<{ [key: number]: number }>({});
   const [deadline, setDeadline] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showEntryList, setShowEntryList] = useState<{ type: 'desert' | 'gap', eventIds: number[] } | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -121,6 +123,29 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
   const gapA = gapEvents.find(e => e.team === 'A');
   const gapB = gapEvents.find(e => e.team === 'B');
 
+  // 締め切り日時を計算（火曜23:59）
+  const getDeadline = (eventDate: string): Date => {
+    const event = new Date(eventDate);
+    const dayOfWeek = event.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const weekStart = new Date(event);
+    weekStart.setDate(event.getDate() + daysToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+
+    // 火曜日 23:59
+    const deadline = new Date(weekStart);
+    deadline.setDate(deadline.getDate() + 1);
+    deadline.setHours(23, 59, 59, 999);
+
+    return deadline;
+  };
+
+  // 締め切りを過ぎているかチェック
+  const isDeadlinePassed = (eventDate: string): boolean => {
+    const deadline = getDeadline(eventDate);
+    return new Date() > deadline;
+  };
+
   // 自分の申し込み状況を取得
   const getMyApplication = (eventId?: number) => {
     if (!eventId) return null;
@@ -137,10 +162,11 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
     gapEvents.some(e => e.id === app.event_id)
   );
 
-  // エントリー状況を判定
+  // エントリー状況を判定（実際の締め切り日時で判定）
   const getEntryStatus = (events: Event[]) => {
     if (events.length === 0) return '未開催';
-    const hasOpen = events.some(e => e.status === 'open');
+    // いずれかのイベントの締め切りが過ぎていなければエントリー中
+    const hasOpen = events.some(e => !isDeadlinePassed(e.event_date));
     if (hasOpen) return 'エントリー中';
     return '締切済';
   };
@@ -161,7 +187,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
 
     const eventDate = new Date(event.event_date);
     const count = applicationsCount[event.id] || 0;
-    const isClosed = event.status !== 'open';
+    const isClosed = isDeadlinePassed(event.event_date);
     const myApp = getMyApplication(event.id);
 
     return (
@@ -272,6 +298,17 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
               }`}>
                 {getEntryStatus(desertEvents)}
               </span>
+              {getEntryStatus(desertEvents) === 'エントリー中' && (
+                <button
+                  onClick={() => setShowEntryList({
+                    type: 'desert',
+                    eventIds: desertEvents.map(e => e.id)
+                  })}
+                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition"
+                >
+                  📋 エントリー一覧
+                </button>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -293,6 +330,17 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
               }`}>
                 {getEntryStatus(gapEvents)}
               </span>
+              {getEntryStatus(gapEvents) === 'エントリー中' && (
+                <button
+                  onClick={() => setShowEntryList({
+                    type: 'gap',
+                    eventIds: gapEvents.map(e => e.id)
+                  })}
+                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition"
+                >
+                  📋 エントリー一覧
+                </button>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -302,6 +350,15 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
           </div>
         )}
       </div>
+
+      {/* エントリー一覧モーダル */}
+      {showEntryList && (
+        <EntryListModal
+          eventIds={showEntryList.eventIds}
+          eventType={showEntryList.type}
+          onClose={() => setShowEntryList(null)}
+        />
+      )}
     </div>
   );
 }
