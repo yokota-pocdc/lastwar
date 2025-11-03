@@ -5,14 +5,15 @@ import Link from 'next/link';
 
 interface HeaderProps {
   user: { id: number; name: string } | null;
+  refreshKey?: number;
 }
 
-export default function Header({ user }: HeaderProps) {
+export default function Header({ user, refreshKey }: HeaderProps) {
   const [tickets, setTickets] = useState(0);
 
   useEffect(() => {
     fetchTickets();
-  }, []);
+  }, [refreshKey]);
 
   const fetchTickets = async () => {
     try {

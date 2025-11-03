@@ -133,7 +133,7 @@ export default function PageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={user} />
+      <Header user={user} refreshKey={refreshKey} />
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* 週次ダッシュボード */}
