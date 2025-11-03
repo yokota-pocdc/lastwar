@@ -108,4 +108,7 @@ export function initializeDatabase() {
   console.log('Database initialized successfully');
 }
 
+// データベースを初期化（モジュールロード時に自動実行）
+initializeDatabase();
+
 export default db;
