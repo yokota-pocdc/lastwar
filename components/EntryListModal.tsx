@@ -44,8 +44,15 @@ export default function EntryListModal({ eventIds, eventType, onClose }: EntryLi
         }
       }
 
-      // スコア順にソート
-      allApplications.sort((a, b) => b.total_score - a.total_score);
+      // スコア順にソート（降順）、同点の場合は申込日時順（昇順）
+      allApplications.sort((a, b) => {
+        // スコアで降順
+        if (b.total_score !== a.total_score) {
+          return b.total_score - a.total_score;
+        }
+        // スコアが同じ場合は申込日時で昇順
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
       setApplications(allApplications);
     } catch (error) {
       console.error('Failed to fetch applications:', error);

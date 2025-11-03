@@ -143,6 +143,31 @@ export default function AdminPage() {
     }
   };
 
+  const handleClearApplications = async () => {
+    const confirmMessage = '【警告】すべての申し込みデータを削除します。\nこの操作は取り消せません。\n本当に実行しますか？';
+    if (!confirm(confirmMessage)) return;
+
+    // 二重確認
+    const doubleConfirm = confirm('再確認：本当にすべての申し込みデータを削除しますか？\nイベントカレンダーは削除されませんが、申し込みデータはすべて削除されます。');
+    if (!doubleConfirm) return;
+
+    try {
+      const res = await fetch('/api/admin/clear-applications', {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        alert('すべての申し込みデータを削除しました');
+        fetchEvents();
+      } else {
+        const data = await res.json();
+        alert(data.error || '削除に失敗しました');
+      }
+    } catch (error) {
+      alert('エラーが発生しました');
+    }
+  };
+
   // 認証されていない場合はログインフォームを表示
   if (!isAuthenticated) {
     return (
@@ -205,11 +230,17 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* カレンダービュー */}
         <div className="mb-6">
-          <div className="mb-4 flex justify-end">
+          <div className="mb-4 flex flex-col sm:flex-row justify-end gap-2">
+            <button
+              onClick={handleClearApplications}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition text-sm sm:text-base"
+            >
+              🗑️ 申し込みデータを全削除
+            </button>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition disabled:bg-gray-400"
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition disabled:bg-gray-400 text-sm sm:text-base"
             >
               {syncing ? '同期中...' : '🔄 Googleカレンダーから同期'}
             </button>

@@ -136,7 +136,9 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
     event: Event | undefined,
     team: 'A' | 'B',
     myApplication: Application | null,
-    otherTeamApplication: Application | null
+    otherTeamApplication: Application | null,
+    eventType: 'desert' | 'gap',
+    allEvents: Event[]
   ) => {
     if (!event) {
       return (
@@ -161,26 +163,59 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
         </div>
 
         {!isClosed && !myApplication && !otherTeamApplication && (
-          <button
-            onClick={() => onEventClick(event)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
-          >
-            エントリー
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => onEventClick(event)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+            >
+              エントリー
+            </button>
+            <button
+              onClick={() => setShowEntryList({
+                type: eventType,
+                eventIds: allEvents.map(e => e.id)
+              })}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-sm"
+            >
+              📋 エントリー一覧
+            </button>
+          </div>
         )}
 
         {!isClosed && myApplication && (
-          <button
-            onClick={() => onEventClick(event)}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
-          >
-            エントリーを取り消す
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => onEventClick(event)}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+            >
+              エントリーを取り消す
+            </button>
+            <button
+              onClick={() => setShowEntryList({
+                type: eventType,
+                eventIds: allEvents.map(e => e.id)
+              })}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-sm"
+            >
+              📋 エントリー一覧
+            </button>
+          </div>
         )}
 
         {!isClosed && otherTeamApplication && !myApplication && (
-          <div className="text-sm text-gray-500 text-center py-2">
-            別小隊にエントリー済み
+          <div className="space-y-2">
+            <div className="text-sm text-gray-500 text-center py-2">
+              別小隊にエントリー済み
+            </div>
+            <button
+              onClick={() => setShowEntryList({
+                type: eventType,
+                eventIds: allEvents.map(e => e.id)
+              })}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-sm"
+            >
+              📋 エントリー一覧
+            </button>
           </div>
         )}
 
@@ -196,7 +231,10 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
               {myApplication.result_status === 'rejected' && '落選'}
             </div>
             <button
-              onClick={() => onResultClick(event)}
+              onClick={() => setShowEntryList({
+                type: eventType,
+                eventIds: allEvents.map(e => e.id)
+              })}
               className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
             >
               参加者・候補者一覧
@@ -210,7 +248,10 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
               未エントリー
             </div>
             <button
-              onClick={() => onResultClick(event)}
+              onClick={() => setShowEntryList({
+                type: eventType,
+                eventIds: allEvents.map(e => e.id)
+              })}
               className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
             >
               参加者・候補者一覧
@@ -257,17 +298,6 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
               }`}>
                 {getEntryStatus('desert', desertEvents)}
               </span>
-              {getEntryStatus('desert', desertEvents) === 'エントリー中' && (
-                <button
-                  onClick={() => setShowEntryList({
-                    type: 'desert',
-                    eventIds: desertEvents.map(e => e.id)
-                  })}
-                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition"
-                >
-                  📋 エントリー一覧
-                </button>
-              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -275,13 +305,17 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
                 desertA,
                 'A',
                 desertApplication && desertApplication.event_id === desertA?.id ? desertApplication : null,
-                desertApplication && desertApplication.event_id === desertB?.id ? desertApplication : null
+                desertApplication && desertApplication.event_id === desertB?.id ? desertApplication : null,
+                'desert',
+                desertEvents
               )}
               {renderSquadCard(
                 desertB,
                 'B',
                 desertApplication && desertApplication.event_id === desertB?.id ? desertApplication : null,
-                desertApplication && desertApplication.event_id === desertA?.id ? desertApplication : null
+                desertApplication && desertApplication.event_id === desertA?.id ? desertApplication : null,
+                'desert',
+                desertEvents
               )}
             </div>
           </div>
@@ -299,17 +333,6 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
               }`}>
                 {getEntryStatus('gap', gapEvents)}
               </span>
-              {getEntryStatus('gap', gapEvents) === 'エントリー中' && (
-                <button
-                  onClick={() => setShowEntryList({
-                    type: 'gap',
-                    eventIds: gapEvents.map(e => e.id)
-                  })}
-                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition"
-                >
-                  📋 エントリー一覧
-                </button>
-              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -317,13 +340,17 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
                 gapA,
                 'A',
                 gapApplication && gapApplication.event_id === gapA?.id ? gapApplication : null,
-                gapApplication && gapApplication.event_id === gapB?.id ? gapApplication : null
+                gapApplication && gapApplication.event_id === gapB?.id ? gapApplication : null,
+                'gap',
+                gapEvents
               )}
               {renderSquadCard(
                 gapB,
                 'B',
                 gapApplication && gapApplication.event_id === gapB?.id ? gapApplication : null,
-                gapApplication && gapApplication.event_id === gapA?.id ? gapApplication : null
+                gapApplication && gapApplication.event_id === gapA?.id ? gapApplication : null,
+                'gap',
+                gapEvents
               )}
             </div>
           </div>
