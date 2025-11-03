@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
 
     // 申込一覧取得
     const applications = db.prepare(`
-      SELECT id, user_id, total_score, created_at, preferred_team, allow_alternative_team
+      SELECT id, user_id, total_score, created_at, preferred_team,
+             allow_alternative_if_rejected, allow_alternative_if_candidate
       FROM applications
       WHERE event_id = ?
     `).all(eventId) as Application[];

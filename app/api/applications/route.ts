@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
     }
 
-    const { eventId, useTicket: wantsTicket, preferredTeam, allowAlternativeTeam } = await request.json();
+    const { eventId, useTicket: wantsTicket, preferredTeam, allowAlternativeIfRejected, allowAlternativeIfCandidate } = await request.json();
 
     // 申込前に自動更新処理を実行
     autoUpdateEventStatus();
@@ -135,8 +135,8 @@ export async function POST(request: NextRequest) {
     const result = db.prepare(`
       INSERT INTO applications (
         event_id, user_id, dice1, dice2, is_doubles, dice_score,
-        used_ticket, total_score, preferred_team, allow_alternative_team
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        used_ticket, total_score, preferred_team, allow_alternative_if_rejected, allow_alternative_if_candidate
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       eventId,
       session.userId,
@@ -147,7 +147,8 @@ export async function POST(request: NextRequest) {
       usedTicket ? 1 : 0,
       totalScore,
       preferredTeam || event.team,
-      allowAlternativeTeam ? 1 : 0
+      allowAlternativeIfRejected ? 1 : 0,
+      allowAlternativeIfCandidate ? 1 : 0
     );
 
     // リアルタイム順位を計算して全員のステータスを更新

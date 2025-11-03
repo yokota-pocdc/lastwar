@@ -58,7 +58,13 @@ export function initializeDatabase() {
   }
 
   try {
-    db.exec(`ALTER TABLE applications ADD COLUMN allow_alternative_team INTEGER DEFAULT 0`);
+    db.exec(`ALTER TABLE applications ADD COLUMN allow_alternative_if_rejected INTEGER DEFAULT 0`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
+
+  try {
+    db.exec(`ALTER TABLE applications ADD COLUMN allow_alternative_if_candidate INTEGER DEFAULT 0`);
   } catch (e) {
     // カラムが既に存在する場合は無視
   }
@@ -76,7 +82,8 @@ export function initializeDatabase() {
       used_ticket INTEGER DEFAULT 0,
       total_score INTEGER NOT NULL,
       preferred_team TEXT CHECK(preferred_team IN ('A', 'B', 'any')),
-      allow_alternative_team INTEGER DEFAULT 0,
+      allow_alternative_if_rejected INTEGER DEFAULT 0,
+      allow_alternative_if_candidate INTEGER DEFAULT 0,
       result_team TEXT CHECK(result_team IN ('A', 'B', NULL)),
       result_status TEXT CHECK(result_status IN ('participant', 'candidate', 'rejected', NULL)),
       rerolled INTEGER DEFAULT 0,

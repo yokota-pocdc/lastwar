@@ -21,7 +21,8 @@ export interface Application {
   total_score: number;
   created_at: string;
   preferred_team: 'A' | 'B';
-  allow_alternative_team?: number;
+  allow_alternative_if_rejected?: number;
+  allow_alternative_if_candidate?: number;
 }
 
 export interface LotteryResult {
@@ -47,80 +48,139 @@ export function executeLottery(
   });
 
   const results: Map<number, LotteryResult> = new Map();
-  let teamACount = 0;
-  let teamBCount = 0;
+
+  // 各チームの参加者数と候補者数を個別に追跡
+  let teamAParticipantCount = 0;
+  let teamACandidateCount = 0;
+  let teamBParticipantCount = 0;
+  let teamBCandidateCount = 0;
 
   // 第1フェーズ: 希望チームに割り当て
   for (const app of sorted) {
     let assigned = false;
 
-    // ユーザーが選択したチームにのみ割り当てる
     if (app.preferred_team === 'A') {
-      if (teamACount < teamAParticipants) {
+      if (teamAParticipantCount < teamAParticipants) {
         results.set(app.id, { applicationId: app.id, resultTeam: 'A', resultStatus: 'participant' });
-        teamACount++;
+        teamAParticipantCount++;
         assigned = true;
-      } else if (teamACount < teamACapacity) {
+      } else if (teamACandidateCount < (teamACapacity - teamAParticipants)) {
         results.set(app.id, { applicationId: app.id, resultTeam: 'A', resultStatus: 'candidate' });
-        teamACount++;
+        teamACandidateCount++;
         assigned = true;
       }
     } else if (app.preferred_team === 'B' && useTeamB) {
-      if (teamBCount < teamBParticipants) {
+      if (teamBParticipantCount < teamBParticipants) {
         results.set(app.id, { applicationId: app.id, resultTeam: 'B', resultStatus: 'participant' });
-        teamBCount++;
+        teamBParticipantCount++;
         assigned = true;
-      } else if (teamBCount < teamBCapacity) {
+      } else if (teamBCandidateCount < (teamBCapacity - teamBParticipants)) {
         results.set(app.id, { applicationId: app.id, resultTeam: 'B', resultStatus: 'candidate' });
-        teamBCount++;
+        teamBCandidateCount++;
         assigned = true;
       }
     }
 
-    // 選択したチームが満員の場合は落選
     if (!assigned) {
       results.set(app.id, { applicationId: app.id, resultTeam: app.preferred_team, resultStatus: 'rejected' });
     }
   }
 
-  // 第2フェーズ: allow_alternative_team=true のユーザーを別チームの余裕枠に割り当て
-  for (const app of sorted) {
-    if (!app.allow_alternative_team) continue;
+  // 第2フェーズ: 反復的な移動処理（収束するまで繰り返す）
+  const MAX_ITERATIONS = 10;
 
-    const currentResult = results.get(app.id);
-    if (!currentResult) continue;
+  for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+    let changed = false;
 
-    const alternativeTeam = app.preferred_team === 'A' ? 'B' : 'A';
+    // ステップA: 候補者→別小隊の参加者枠への移動（スコア順）
+    for (const app of sorted) {
+      if (!app.allow_alternative_if_candidate) continue;
 
-    // 落選者の場合：別チームの参加者枠または候補者枠に移動
-    if (currentResult.resultStatus === 'rejected') {
+      const current = results.get(app.id);
+      if (!current || current.resultStatus !== 'candidate') continue;
+
+      const alternativeTeam = app.preferred_team === 'A' ? 'B' : 'A';
+
+      // 別小隊の参加者枠に空きがあるか確認
+      if (alternativeTeam === 'A' && teamAParticipantCount < teamAParticipants) {
+        // 元のチームの候補者枠を解放
+        if (current.resultTeam === 'B') {
+          teamBCandidateCount--;
+        } else {
+          teamACandidateCount--;
+        }
+        // 別小隊の参加者として移動
+        results.set(app.id, { applicationId: app.id, resultTeam: 'A', resultStatus: 'participant' });
+        teamAParticipantCount++;
+        changed = true;
+      } else if (alternativeTeam === 'B' && useTeamB && teamBParticipantCount < teamBParticipants) {
+        // 元のチームの候補者枠を解放
+        if (current.resultTeam === 'A') {
+          teamACandidateCount--;
+        } else {
+          teamBCandidateCount--;
+        }
+        // 別小隊の参加者として移動
+        results.set(app.id, { applicationId: app.id, resultTeam: 'B', resultStatus: 'participant' });
+        teamBParticipantCount++;
+        changed = true;
+      }
+    }
+
+    // ステップB: 空いた候補者枠を落選者で埋める（スコア順）
+    for (const app of sorted) {
+      const current = results.get(app.id);
+      if (!current || current.resultStatus !== 'rejected') continue;
+
+      // 希望チームの候補者枠に空きがあれば昇格
+      if (app.preferred_team === 'A' && teamACandidateCount < (teamACapacity - teamAParticipants)) {
+        results.set(app.id, { applicationId: app.id, resultTeam: 'A', resultStatus: 'candidate' });
+        teamACandidateCount++;
+        changed = true;
+      } else if (app.preferred_team === 'B' && useTeamB && teamBCandidateCount < (teamBCapacity - teamBParticipants)) {
+        results.set(app.id, { applicationId: app.id, resultTeam: 'B', resultStatus: 'candidate' });
+        teamBCandidateCount++;
+        changed = true;
+      }
+    }
+
+    // ステップC: 落選者→別小隊への移動（スコア順）
+    for (const app of sorted) {
+      if (!app.allow_alternative_if_rejected) continue;
+
+      const current = results.get(app.id);
+      if (!current || current.resultStatus !== 'rejected') continue;
+
+      const alternativeTeam = app.preferred_team === 'A' ? 'B' : 'A';
+
+      // 別小隊の参加者枠を優先的に試す
       if (alternativeTeam === 'A') {
-        if (teamACount < teamAParticipants) {
+        if (teamAParticipantCount < teamAParticipants) {
           results.set(app.id, { applicationId: app.id, resultTeam: 'A', resultStatus: 'participant' });
-          teamACount++;
-        } else if (teamACount < teamACapacity) {
+          teamAParticipantCount++;
+          changed = true;
+        } else if (teamACandidateCount < (teamACapacity - teamAParticipants)) {
           results.set(app.id, { applicationId: app.id, resultTeam: 'A', resultStatus: 'candidate' });
-          teamACount++;
+          teamACandidateCount++;
+          changed = true;
         }
       } else if (alternativeTeam === 'B' && useTeamB) {
-        if (teamBCount < teamBParticipants) {
+        if (teamBParticipantCount < teamBParticipants) {
           results.set(app.id, { applicationId: app.id, resultTeam: 'B', resultStatus: 'participant' });
-          teamBCount++;
-        } else if (teamBCount < teamBCapacity) {
+          teamBParticipantCount++;
+          changed = true;
+        } else if (teamBCandidateCount < (teamBCapacity - teamBParticipants)) {
           results.set(app.id, { applicationId: app.id, resultTeam: 'B', resultStatus: 'candidate' });
-          teamBCount++;
+          teamBCandidateCount++;
+          changed = true;
         }
       }
     }
-    // 候補者の場合：別チームの参加者枠に移動
-    else if (currentResult.resultStatus === 'candidate') {
-      if (alternativeTeam === 'A' && teamACount < teamAParticipants) {
-        results.set(app.id, { applicationId: app.id, resultTeam: 'A', resultStatus: 'participant' });
-        teamACount++;
-      } else if (alternativeTeam === 'B' && useTeamB && teamBCount < teamBParticipants) {
-        results.set(app.id, { applicationId: app.id, resultTeam: 'B', resultStatus: 'participant' });
-        teamBCount++;
-      }
+
+    // 変更がなければ収束したので終了
+    if (!changed) {
+      console.log(`抽選処理が${iteration + 1}回の反復で収束しました`);
+      break;
     }
   }
 
