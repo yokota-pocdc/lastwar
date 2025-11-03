@@ -127,8 +127,8 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
   // エントリー状況を判定（エントリー期間で判定）
   const getEntryStatus = (eventType: 'desert' | 'gap', events: Event[]) => {
     if (events.length === 0) return '未開催';
-    // エントリー期間内なら「エントリー中」、それ以外は「締切済」
-    if (isEntryOpen(eventType)) return 'エントリー中';
+    // エントリー期間内なら「受付中」、それ以外は「締切済」
+    if (isEntryOpen(eventType)) return '受付中';
     return '締切済';
   };
 
@@ -292,7 +292,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-xl font-bold">🏜️ 砂漠の戦場</h3>
               <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                getEntryStatus('desert', desertEvents) === 'エントリー中'
+                getEntryStatus('desert', desertEvents) === '受付中'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-gray-100 text-gray-800'
               }`}>
@@ -327,7 +327,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-xl font-bold">⚔️ 狭間の戦場</h3>
               <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                getEntryStatus('gap', gapEvents) === 'エントリー中'
+                getEntryStatus('gap', gapEvents) === '受付中'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-gray-100 text-gray-800'
               }`}>
