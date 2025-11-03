@@ -44,18 +44,23 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
-      <div className="bg-white p-8 rounded-lg shadow-2xl max-w-md w-full">
-        <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">
-          ラストウォー
-        </h1>
-        <h2 className="text-xl text-center mb-6 text-gray-600">
-          抽選アプリ
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+        <div className="text-center mb-8">
+          <div className="inline-block w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg mb-4">
+            <span className="text-5xl">🎮</span>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-1">
+            イベント参加申込システム
+          </h1>
+          <h2 className="text-lg text-gray-500 font-medium">
+            -jfkh-
+          </h2>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
               プレイヤー名を入力してください
             </label>
             <input
@@ -63,14 +68,14 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition"
               placeholder="例: 太郎"
               disabled={loading}
             />
           </div>
 
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div className="bg-rose-100 border-2 border-rose-300 text-rose-700 px-4 py-3 rounded-lg">
               {error}
             </div>
           )}
@@ -78,15 +83,14 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 disabled:bg-gray-400"
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '処理中...' : '入場'}
+            {loading ? '処理中...' : '🚀 入場'}
           </button>
         </form>
 
-        <div className="mt-6 text-sm text-gray-600 text-center">
-          <p>砂漠の戦場・狭間の戦場の</p>
-          <p>参加者抽選システムです</p>
+        <div className="mt-6 text-sm text-gray-600 text-center bg-gray-50 rounded-lg p-3">
+          <p>イベント参加者抽選・管理システム</p>
         </div>
       </div>
     </div>

@@ -153,8 +153,8 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
     const isClosed = !isEntryOpen(event.event_type);
 
     return (
-      <div className="flex-1 min-w-0 bg-white border-2 border-gray-200 rounded-lg p-4">
-        <div className="font-bold text-lg mb-2">小隊{team}</div>
+      <div className="flex-1 min-w-0 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div className="font-bold text-lg mb-2 text-gray-800">小隊{team}</div>
         <div className="text-sm text-gray-600 mb-1">
           {format(eventDate, 'M/d(E) HH:mm', { locale: ja })}
         </div>
@@ -166,7 +166,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
           <div className="space-y-2">
             <button
               onClick={() => onEventClick(event)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md text-sm"
             >
               エントリー
             </button>
@@ -175,7 +175,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-sm"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition border border-gray-300 text-sm"
             >
               📋 エントリー一覧
             </button>
@@ -186,7 +186,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
           <div className="space-y-2">
             <button
               onClick={() => onEventClick(event)}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+              className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md text-sm"
             >
               エントリーを取り消す
             </button>
@@ -195,7 +195,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-sm"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition border border-gray-300 text-sm"
             >
               📋 エントリー一覧
             </button>
@@ -204,7 +204,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
 
         {!isClosed && otherTeamApplication && !myApplication && (
           <div className="space-y-2">
-            <div className="text-sm text-gray-500 text-center py-2">
+            <div className="text-sm text-gray-500 text-center py-2 bg-gray-50 rounded-lg">
               別小隊にエントリー済み
             </div>
             <button
@@ -212,7 +212,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-sm"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition border border-gray-300 text-sm"
             >
               📋 エントリー一覧
             </button>
@@ -221,21 +221,21 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
 
         {isClosed && myApplication && (
           <div className="space-y-2">
-            <div className={`text-center font-bold py-2 rounded ${
-              myApplication.result_status === 'participant' ? 'bg-green-100 text-green-800' :
-              myApplication.result_status === 'candidate' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
+            <div className={`text-center font-bold py-2 rounded-lg shadow-sm border ${
+              myApplication.result_status === 'participant' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+              myApplication.result_status === 'candidate' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+              'bg-rose-100 text-rose-800 border-rose-300'
             }`}>
-              {myApplication.result_status === 'participant' && '参加者に確定'}
-              {myApplication.result_status === 'candidate' && '候補者に確定'}
-              {myApplication.result_status === 'rejected' && '落選'}
+              {myApplication.result_status === 'participant' && '✓ 参加者に確定'}
+              {myApplication.result_status === 'candidate' && '⏳ 候補者に確定'}
+              {myApplication.result_status === 'rejected' && '✗ 落選'}
             </div>
             <button
               onClick={() => setShowEntryList({
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+              className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2 px-4 rounded-lg transition shadow-sm text-sm"
             >
               参加者・候補者一覧
             </button>
@@ -244,7 +244,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
 
         {isClosed && !myApplication && (
           <div className="space-y-2">
-            <div className="text-center text-gray-600 py-2">
+            <div className="text-center text-gray-600 py-2 bg-gray-50 rounded-lg">
               未エントリー
             </div>
             <button
@@ -252,7 +252,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+              className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2 px-4 rounded-lg transition shadow-sm text-sm"
             >
               参加者・候補者一覧
             </button>
@@ -277,7 +277,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
   return (
     <div className="bg-white rounded-lg shadow-lg">
       {/* ヘッダー */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-t-lg">
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 rounded-t-lg shadow-md">
         <h2 className="text-2xl font-bold mb-2">今週のエントリー状況</h2>
         <div className="text-sm opacity-90">
           <div>🏜️ 砂漠: 月曜11:00～火曜23:59</div>
@@ -285,16 +285,16 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 bg-gradient-to-b from-gray-50 to-white">
         {/* 砂漠の戦場 */}
         {desertEvents.length > 0 && (
-          <div className="border-l-4 border-orange-500 pl-4">
+          <div className="border-l-4 border-amber-500 pl-4 bg-white rounded-r-lg py-3 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-xl font-bold">🏜️ 砂漠の戦場</h3>
-              <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+              <h3 className="text-xl font-bold text-gray-800">🏜️ 砂漠の戦場</h3>
+              <span className={`px-3 py-1 rounded-full text-sm font-bold shadow-sm ${
                 getEntryStatus('desert', desertEvents) === '受付中'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                  : 'bg-gray-100 text-gray-600 border border-gray-300'
               }`}>
                 {getEntryStatus('desert', desertEvents)}
               </span>
@@ -323,13 +323,13 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
 
         {/* 狭間の戦場 */}
         {gapEvents.length > 0 && (
-          <div className="border-l-4 border-purple-500 pl-4">
+          <div className="border-l-4 border-violet-500 pl-4 bg-white rounded-r-lg py-3 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-xl font-bold">⚔️ 狭間の戦場</h3>
-              <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+              <h3 className="text-xl font-bold text-gray-800">⚔️ 狭間の戦場</h3>
+              <span className={`px-3 py-1 rounded-full text-sm font-bold shadow-sm ${
                 getEntryStatus('gap', gapEvents) === '受付中'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                  : 'bg-gray-100 text-gray-600 border border-gray-300'
               }`}>
                 {getEntryStatus('gap', gapEvents)}
               </span>
