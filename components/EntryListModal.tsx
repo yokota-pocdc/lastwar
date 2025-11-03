@@ -15,6 +15,8 @@ interface Application {
   used_ticket: number;
   created_at: string;
   result_status?: string;
+  allow_alternative_if_rejected?: number;
+  allow_alternative_if_candidate?: number;
 }
 
 interface EntryListModalProps {
@@ -100,6 +102,7 @@ export default function EntryListModal({ eventIds, eventType, onClose }: EntryLi
                       <th className="border p-2 text-center">サイコロ</th>
                       <th className="border p-2 text-center">チケット</th>
                       <th className="border p-2 text-left">申し込み日時</th>
+                      <th className="border p-2 text-center">移動オプション</th>
                       <th className="border p-2 text-center">状態</th>
                     </tr>
                   </thead>
@@ -121,6 +124,23 @@ export default function EntryListModal({ eventIds, eventType, onClose }: EntryLi
                         </td>
                         <td className="border p-2 text-sm">
                           {format(new Date(app.created_at), 'M/d HH:mm', { locale: ja })}
+                        </td>
+                        <td className="border p-2 text-center">
+                          <div className="flex flex-col gap-1 items-center">
+                            {app.allow_alternative_if_rejected === 1 && (
+                              <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs whitespace-nowrap">
+                                落選時移動
+                              </span>
+                            )}
+                            {app.allow_alternative_if_candidate === 1 && (
+                              <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs whitespace-nowrap">
+                                候補時移動
+                              </span>
+                            )}
+                            {!app.allow_alternative_if_rejected && !app.allow_alternative_if_candidate && (
+                              <span className="text-gray-400 text-xs">-</span>
+                            )}
+                          </div>
                         </td>
                         <td className="border p-2 text-center">
                           {app.result_status === 'participant' && (
@@ -168,6 +188,20 @@ export default function EntryListModal({ eventIds, eventType, onClose }: EntryLi
                         <div className="text-yellow-600">🎟️ チケット使用</div>
                       )}
                     </div>
+                    {(app.allow_alternative_if_rejected === 1 || app.allow_alternative_if_candidate === 1) && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {app.allow_alternative_if_rejected === 1 && (
+                          <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs">
+                            落選時移動
+                          </span>
+                        )}
+                        {app.allow_alternative_if_candidate === 1 && (
+                          <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">
+                            候補時移動
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {app.result_status && (
                       <div className="mt-2">
                         {app.result_status === 'participant' && (
