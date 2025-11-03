@@ -148,7 +148,6 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
     const eventDate = new Date(event.event_date);
     const count = applicationsCount[event.id] || 0;
     const isClosed = !isEntryOpen(event.event_type);
-    const myApp = getMyApplication(event.id);
 
     return (
       <div className="flex-1 min-w-0 bg-white border-2 border-gray-200 rounded-lg p-4">
@@ -160,7 +159,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
           エントリー人数: {count}人
         </div>
 
-        {!isClosed && !myApp && !otherTeamApplication && (
+        {!isClosed && !myApplication && !otherTeamApplication && (
           <button
             onClick={() => onEventClick(event)}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
@@ -169,7 +168,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
           </button>
         )}
 
-        {!isClosed && myApp && (
+        {!isClosed && myApplication && (
           <button
             onClick={() => onEventClick(event)}
             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
@@ -178,22 +177,22 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
           </button>
         )}
 
-        {!isClosed && otherTeamApplication && !myApp && (
+        {!isClosed && otherTeamApplication && !myApplication && (
           <div className="text-sm text-gray-500 text-center py-2">
             別小隊にエントリー済み
           </div>
         )}
 
-        {isClosed && myApp && (
+        {isClosed && myApplication && (
           <div className="space-y-2">
             <div className={`text-center font-bold py-2 rounded ${
-              myApp.result_status === 'participant' ? 'bg-green-100 text-green-800' :
-              myApp.result_status === 'candidate' ? 'bg-yellow-100 text-yellow-800' :
+              myApplication.result_status === 'participant' ? 'bg-green-100 text-green-800' :
+              myApplication.result_status === 'candidate' ? 'bg-yellow-100 text-yellow-800' :
               'bg-red-100 text-red-800'
             }`}>
-              {myApp.result_status === 'participant' && '参加者に確定'}
-              {myApp.result_status === 'candidate' && '候補者に確定'}
-              {myApp.result_status === 'rejected' && '落選'}
+              {myApplication.result_status === 'participant' && '参加者に確定'}
+              {myApplication.result_status === 'candidate' && '候補者に確定'}
+              {myApplication.result_status === 'rejected' && '落選'}
             </div>
             <button
               onClick={() => onResultClick(event)}
@@ -204,7 +203,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
           </div>
         )}
 
-        {isClosed && !myApp && (
+        {isClosed && !myApplication && (
           <div className="space-y-2">
             <div className="text-center text-gray-600 py-2">
               未エントリー
@@ -271,8 +270,18 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              {renderSquadCard(desertA, 'A', desertApplication || null, desertB && desertApplication?.event_id === desertB.id ? desertApplication : null)}
-              {renderSquadCard(desertB, 'B', desertApplication || null, desertA && desertApplication?.event_id === desertA.id ? desertApplication : null)}
+              {renderSquadCard(
+                desertA,
+                'A',
+                desertApplication && desertApplication.event_id === desertA?.id ? desertApplication : null,
+                desertApplication && desertApplication.event_id === desertB?.id ? desertApplication : null
+              )}
+              {renderSquadCard(
+                desertB,
+                'B',
+                desertApplication && desertApplication.event_id === desertB?.id ? desertApplication : null,
+                desertApplication && desertApplication.event_id === desertA?.id ? desertApplication : null
+              )}
             </div>
           </div>
         )}
@@ -303,8 +312,18 @@ export default function WeeklyDashboard({ onEventClick, onResultClick }: WeeklyD
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              {renderSquadCard(gapA, 'A', gapApplication || null, gapB && gapApplication?.event_id === gapB.id ? gapApplication : null)}
-              {renderSquadCard(gapB, 'B', gapApplication || null, gapA && gapApplication?.event_id === gapA.id ? gapApplication : null)}
+              {renderSquadCard(
+                gapA,
+                'A',
+                gapApplication && gapApplication.event_id === gapA?.id ? gapApplication : null,
+                gapApplication && gapApplication.event_id === gapB?.id ? gapApplication : null
+              )}
+              {renderSquadCard(
+                gapB,
+                'B',
+                gapApplication && gapApplication.event_id === gapB?.id ? gapApplication : null,
+                gapApplication && gapApplication.event_id === gapA?.id ? gapApplication : null
+              )}
             </div>
           </div>
         )}
