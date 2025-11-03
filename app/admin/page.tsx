@@ -144,11 +144,11 @@ export default function AdminPage() {
   };
 
   const handleClearApplications = async () => {
-    const confirmMessage = '【警告】すべてのユーザーデータを削除します。\n・申し込みデータ\n・ユーザー情報\n・サイコロ履歴\n※イベントカレンダーは残ります\n※実行後は自動的にログアウトされます\n\nこの操作は取り消せません。\n本当に実行しますか？';
+    const confirmMessage = '【警告】すべてのデータを削除します。\n・申し込みデータ\n・ユーザー情報\n・サイコロ履歴\n・イベントデータ\n\n※Googleカレンダーから再同期できます\n※実行後は自動的にログアウトされます\n\nこの操作は取り消せません。\n本当に実行しますか？';
     if (!confirm(confirmMessage)) return;
 
     // 二重確認
-    const doubleConfirm = confirm('再確認：本当にすべてのユーザーデータを削除しますか？\n管理者を含む全ユーザーとサイコロ履歴が削除され、再ログインが必要になります。');
+    const doubleConfirm = confirm('再確認：本当にすべてのデータを削除しますか？\nデータベースが完全にクリアされます。\n\n削除後の復元手順：\n1. Googleカレンダーから同期ボタンを押す\n2. イベントが復元される\n3. ユーザーが新規登録してテスト開始');
     if (!doubleConfirm) return;
 
     try {
@@ -157,7 +157,7 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        alert('すべてのデータを削除しました。ログイン画面に戻ります。');
+        alert('すべてのデータを削除しました。\n\n次の手順：\n1. Googleカレンダーから同期してイベントを復元\n2. ユーザー新規登録でテスト開始\n\nログイン画面に戻ります。');
         // セッションをクリアして、ログイン画面にリダイレクト
         sessionStorage.removeItem('adminAuth');
         window.location.href = '/';
