@@ -59,56 +59,35 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
     }
 
     try {
-      if (applicationId) {
-        // 振り直し
-        const res = await fetch(`/api/applications/${applicationId}/reroll`, {
-          method: 'POST',
-        });
-        const data = await res.json();
+      // 新規申込のみ対応（振り直し機能は削除）
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId,
+          useTicket,
+          preferredTeam: selectedTeam,
+        }),
+      });
+      const data = await res.json();
 
-        if (res.ok) {
-          // アニメーション時間（2秒）後に結果を表示
+      if (res.ok) {
+        if (skipAnimation) {
+          // 既存サイコロの場合はアニメーションなしで即座に完了
+          onComplete(data.application);
+        } else {
+          // 新規サイコロの場合はアニメーション付き
           setTimeout(() => {
-            setResult(data);
+            setResult({ application: data.application, improved: true });
             setTimeout(() => {
               onComplete(data.application);
             }, 2000);
           }, 2000);
-        } else {
-          alert(data.error || '振り直しに失敗しました');
-          setRolling(false);
         }
       } else {
-        // 新規申込
-        const res = await fetch('/api/applications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventId,
-            useTicket,
-            preferredTeam: selectedTeam,
-          }),
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          if (skipAnimation) {
-            // 既存サイコロの場合はアニメーションなしで即座に完了
-            onComplete(data.application);
-          } else {
-            // 新規サイコロの場合はアニメーション付き
-            setTimeout(() => {
-              setResult({ application: data.application, improved: true });
-              setTimeout(() => {
-                onComplete(data.application);
-              }, 2000);
-            }, 2000);
-          }
-        } else {
-          alert(data.error || '申込に失敗しました');
-          if (!skipAnimation) {
-            setRolling(false);
-          }
+        alert(data.error || '申込に失敗しました');
+        if (!skipAnimation) {
+          setRolling(false);
         }
       }
     } catch (error) {
@@ -158,7 +137,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
         ) : !rolling && !result && (
           <>
             <h3 className="text-2xl font-bold mb-4 text-center">
-              {applicationId ? 'サイコロ振り直し' : weeklyDice ? 'この週のサイコロ' : 'サイコロを振る'}
+              {weeklyDice ? 'この週のサイコロ' : 'サイコロを振る'}
             </h3>
 
             <div className="mb-4 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg text-center">

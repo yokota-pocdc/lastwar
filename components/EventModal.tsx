@@ -273,21 +273,6 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
                   </div>
                 )}
 
-                {!application.rerolled && event.status === 'open' && !event.lottery_executed && (
-                  <button
-                    onClick={() => setShowDiceRoller(true)}
-                    className="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg transition"
-                  >
-                    🎲 サイコロ振り直し（1回のみ）
-                  </button>
-                )}
-
-                {application.rerolled && (
-                  <div className="text-sm text-gray-500 text-center mt-4">
-                    既に振り直し済みです
-                  </div>
-                )}
-
                 {event.status === 'open' && !event.lottery_executed && (
                   <button
                     onClick={handleCancelApplication}
@@ -332,7 +317,6 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
           {showDiceRoller && (
             <DiceRoller
               eventId={event.id}
-              applicationId={application?.id}
               selectedTeam={application?.preferred_team || event.team}
               eventDate={event.event_date}
               onComplete={handleApplicationComplete}
