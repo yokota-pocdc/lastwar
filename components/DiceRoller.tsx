@@ -14,6 +14,7 @@ interface DiceRollerProps {
 export default function DiceRoller({ eventId, applicationId, selectedTeam, eventDate, onComplete, onCancel }: DiceRollerProps) {
   const [tickets, setTickets] = useState(0);
   const [useTicket, setUseTicket] = useState(false);
+  const [allowAlternativeTeam, setAllowAlternativeTeam] = useState(false);
   const [rolling, setRolling] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [weeklyDice, setWeeklyDice] = useState<any>(null);
@@ -67,6 +68,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
           eventId,
           useTicket,
           preferredTeam: selectedTeam,
+          allowAlternativeTeam,
         }),
       });
       const data = await res.json();
@@ -168,7 +170,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
             )}
 
             {!applicationId && tickets > 0 && !weeklyDice && (
-              <div className="mb-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
+              <div className="mb-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -180,6 +182,26 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
                     <div className="font-bold text-gray-900">🎟️ 絶対参加チケットを使用</div>
                     <div className="text-sm text-gray-600">
                       +12点ボーナス（残り{tickets}枚）
+                    </div>
+                  </div>
+                </label>
+              </div>
+            )}
+
+            {!applicationId && (
+              <div className="mb-6 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={allowAlternativeTeam}
+                    onChange={(e) => setAllowAlternativeTeam(e.target.checked)}
+                    className="w-5 h-5 mt-1"
+                  />
+                  <div>
+                    <div className="font-bold text-gray-900">🔄 別小隊への移動を希望</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      ・落選した場合、別小隊に枠が余っていれば参加できます<br/>
+                      ・候補者の場合、別小隊に参加者枠が余っていれば参加者になれます
                     </div>
                   </div>
                 </label>

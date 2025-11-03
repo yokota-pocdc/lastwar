@@ -57,6 +57,12 @@ export function initializeDatabase() {
     // カラムが既に存在する場合は無視
   }
 
+  try {
+    db.exec(`ALTER TABLE applications ADD COLUMN allow_alternative_team INTEGER DEFAULT 0`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
+
   // 参加申込テーブル
   db.exec(`
     CREATE TABLE IF NOT EXISTS applications (
@@ -70,6 +76,7 @@ export function initializeDatabase() {
       used_ticket INTEGER DEFAULT 0,
       total_score INTEGER NOT NULL,
       preferred_team TEXT CHECK(preferred_team IN ('A', 'B', 'any')),
+      allow_alternative_team INTEGER DEFAULT 0,
       result_team TEXT CHECK(result_team IN ('A', 'B', NULL)),
       result_status TEXT CHECK(result_status IN ('participant', 'candidate', 'rejected', NULL)),
       rerolled INTEGER DEFAULT 0,
