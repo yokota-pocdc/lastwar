@@ -92,8 +92,7 @@ export function initializeDatabase() {
       total_score INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(user_id, year, week),
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      UNIQUE(user_id, year, week)
     )
   `);
 
