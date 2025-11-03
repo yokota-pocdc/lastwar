@@ -173,7 +173,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
             <button
               onClick={() => setShowEntryList({
                 type: eventType,
-                eventIds: allEvents.map(e => e.id)
+                eventIds: [event.id]
               })}
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-sm"
             >
@@ -193,7 +193,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
             <button
               onClick={() => setShowEntryList({
                 type: eventType,
-                eventIds: allEvents.map(e => e.id)
+                eventIds: [event.id]
               })}
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-sm"
             >
@@ -210,7 +210,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
             <button
               onClick={() => setShowEntryList({
                 type: eventType,
-                eventIds: allEvents.map(e => e.id)
+                eventIds: [event.id]
               })}
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-sm"
             >
@@ -233,7 +233,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
             <button
               onClick={() => setShowEntryList({
                 type: eventType,
-                eventIds: allEvents.map(e => e.id)
+                eventIds: [event.id]
               })}
               className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
             >
@@ -250,7 +250,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
             <button
               onClick={() => setShowEntryList({
                 type: eventType,
-                eventIds: allEvents.map(e => e.id)
+                eventIds: [event.id]
               })}
               className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
             >
