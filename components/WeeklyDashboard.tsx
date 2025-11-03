@@ -153,20 +153,20 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
     const isClosed = !isEntryOpen(event.event_type);
 
     return (
-      <div className="flex-1 min-w-0 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-        <div className="font-bold text-lg mb-2 text-gray-800">小隊{team}</div>
-        <div className="text-sm text-gray-600 mb-1">
+      <div className="flex-1 min-w-0 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg p-2 sm:p-3 shadow-sm hover:shadow-md transition-shadow">
+        <div className="font-bold text-base sm:text-lg mb-1 text-gray-800">小隊{team}</div>
+        <div className="text-xs sm:text-sm text-gray-600 mb-1">
           {format(eventDate, 'M/d(E) HH:mm', { locale: ja })}
         </div>
-        <div className="text-sm text-gray-600 mb-3">
-          エントリー人数: {count}人
+        <div className="text-xs sm:text-sm text-gray-600 mb-2">
+          エントリー済:{count}人
         </div>
 
         {!isClosed && !myApplication && !otherTeamApplication && (
-          <div className="space-y-2">
+          <div className="flex flex-col gap-1">
             <button
               onClick={() => onEventClick(event)}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md text-sm"
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-1.5 px-2 rounded-lg transition shadow-md text-xs sm:text-sm"
             >
               エントリー
             </button>
@@ -175,59 +175,59 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition border border-gray-300 text-sm"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-1.5 px-2 rounded-lg transition border border-gray-300 text-xs sm:text-sm"
             >
-              📋 エントリー一覧
+              一覧
             </button>
           </div>
         )}
 
         {!isClosed && myApplication && (
-          <div className="space-y-2">
+          <div className="flex flex-col gap-1">
             <button
               onClick={() => onEventClick(event)}
-              className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md text-sm"
+              className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold py-1.5 px-2 rounded-lg transition shadow-md text-xs sm:text-sm"
             >
-              エントリーを取り消す
+              取消
             </button>
             <button
               onClick={() => setShowEntryList({
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition border border-gray-300 text-sm"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-1.5 px-2 rounded-lg transition border border-gray-300 text-xs sm:text-sm"
             >
-              📋 エントリー一覧
+              一覧
             </button>
           </div>
         )}
 
         {!isClosed && otherTeamApplication && !myApplication && (
-          <div className="space-y-2">
-            <div className="text-sm text-gray-500 text-center py-2 bg-gray-50 rounded-lg">
-              別小隊にエントリー済み
+          <div className="flex flex-col gap-1">
+            <div className="text-xs text-gray-500 text-center py-1 bg-gray-50 rounded-lg">
+              別小隊済
             </div>
             <button
               onClick={() => setShowEntryList({
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition border border-gray-300 text-sm"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-1.5 px-2 rounded-lg transition border border-gray-300 text-xs sm:text-sm"
             >
-              📋 エントリー一覧
+              一覧
             </button>
           </div>
         )}
 
         {isClosed && myApplication && (
-          <div className="space-y-2">
-            <div className={`text-center font-bold py-2 rounded-lg shadow-sm border ${
+          <div className="flex flex-col gap-1">
+            <div className={`text-center font-bold py-1 text-xs sm:text-sm rounded-lg shadow-sm border ${
               myApplication.result_status === 'participant' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
               myApplication.result_status === 'candidate' ? 'bg-amber-100 text-amber-800 border-amber-300' :
               'bg-rose-100 text-rose-800 border-rose-300'
             }`}>
-              {myApplication.result_status === 'participant' && '✓ 参加者に確定'}
-              {myApplication.result_status === 'candidate' && '⏳ 候補者に確定'}
+              {myApplication.result_status === 'participant' && '✓ 参加者'}
+              {myApplication.result_status === 'candidate' && '⏳ 候補者'}
               {myApplication.result_status === 'rejected' && '✗ 落選'}
             </div>
             <button
@@ -235,16 +235,16 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2 px-4 rounded-lg transition shadow-sm text-sm"
+              className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-1.5 px-2 rounded-lg transition shadow-sm text-xs sm:text-sm"
             >
-              参加者・候補者一覧
+              一覧
             </button>
           </div>
         )}
 
         {isClosed && !myApplication && (
-          <div className="space-y-2">
-            <div className="text-center text-gray-600 py-2 bg-gray-50 rounded-lg">
+          <div className="flex flex-col gap-1">
+            <div className="text-center text-gray-600 text-xs py-1 bg-gray-50 rounded-lg">
               未エントリー
             </div>
             <button
@@ -252,9 +252,9 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
                 type: eventType,
                 eventIds: [event.id]
               })}
-              className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2 px-4 rounded-lg transition shadow-sm text-sm"
+              className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-1.5 px-2 rounded-lg transition shadow-sm text-xs sm:text-sm"
             >
-              参加者・候補者一覧
+              一覧
             </button>
           </div>
         )}
@@ -300,7 +300,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-row gap-2 sm:gap-4">
               {renderSquadCard(
                 desertA,
                 'A',
@@ -335,7 +335,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-row gap-2 sm:gap-4">
               {renderSquadCard(
                 gapA,
                 'A',
