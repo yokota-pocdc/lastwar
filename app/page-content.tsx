@@ -143,7 +143,8 @@ export default function PageContent() {
             refreshKey={refreshKey}
           />
 
-          {/* カレンダービュー */}
+          {/* カレンダービュー - 一時的に非表示（将来的に使用予定） */}
+          {/*
           <div>
             <h2 className="text-xl font-bold mb-4">📅 カレンダー</h2>
             <UserCalendar
@@ -152,6 +153,7 @@ export default function PageContent() {
               onEventsChange={handleEventsChange}
             />
           </div>
+          */}
         </div>
       </main>
 
