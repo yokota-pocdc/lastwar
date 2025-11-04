@@ -143,6 +143,42 @@ export default function AdminPage() {
     }
   };
 
+  const handleClearData = async () => {
+    const confirmMessage =
+      '⚠️ 警告：以下のデータが完全に削除されます\n\n' +
+      '- 全ての申し込みデータ\n' +
+      '- 週次サイコロデータ\n' +
+      '- 同期ログ\n' +
+      '- 不整合データ\n\n' +
+      'イベントカレンダーとユーザー情報は保持されます。\n\n' +
+      '本当に削除しますか？';
+
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      const res = await fetch('/api/admin/clear-data', {
+        method: 'POST',
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        const message =
+          'データを削除しました\n\n' +
+          `申し込みデータ: ${data.deleted.applications}件\n` +
+          `週次サイコロ: ${data.deleted.weeklyDice}件\n` +
+          `同期ログ: ${data.deleted.syncLogs}件\n` +
+          `不整合データ: ${data.deleted.inconsistencies}件`;
+        alert(message);
+        fetchEvents(); // UIを更新
+      } else {
+        alert(data.error || 'データの削除に失敗しました');
+      }
+    } catch (error) {
+      alert('エラーが発生しました');
+    }
+  };
+
   // 認証されていない場合はログインフォームを表示
   if (!isAuthenticated) {
     return (
@@ -187,7 +223,13 @@ export default function AdminPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold text-purple-600">管理画面</h1>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
+              <button
+                onClick={handleClearData}
+                className="text-sm sm:text-base bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded transition"
+              >
+                🗑️ データクリア
+              </button>
               <button
                 onClick={handleLogout}
                 className="text-sm sm:text-base text-red-600 hover:underline"
