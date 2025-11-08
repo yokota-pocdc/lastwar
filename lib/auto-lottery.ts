@@ -4,9 +4,8 @@ import { startOfWeek, addDays } from 'date-fns';
 
 /**
  * イベントの締め切り日時を計算
- * - 砂漠: 火曜日 20:59:59
- * - 狭間: 日曜日 20:59:59
- * イベントが属する週の締切日時
+ * - 砂漠: 火曜日 21:00（イベント開催週の火曜）
+ * - 狭間: 日曜日 21:00（イベント開催週の前週の日曜）
  */
 export function getDeadline(eventDate: string, eventType: 'desert' | 'gap'): Date {
   const eventDateTime = new Date(eventDate);
@@ -15,14 +14,14 @@ export function getDeadline(eventDate: string, eventType: 'desert' | 'gap'): Dat
   const weekStart = startOfWeek(eventDateTime, { weekStartsOn: 1 }); // 月曜始まり
 
   if (eventType === 'gap') {
-    // 狭間: 日曜日 20:59:59（月曜 + 6日 = 次の日曜）
-    const deadline = addDays(weekStart, 6);
-    deadline.setHours(20, 59, 59, 999);
+    // 狭間: 前週の日曜日 21:00（月曜 - 1日 = 前週の日曜）
+    const deadline = addDays(weekStart, -1);
+    deadline.setHours(21, 0, 0, 0);
     return deadline;
   } else {
-    // 砂漠: 火曜日 20:59:59（月曜 + 1日）
+    // 砂漠: 火曜日 21:00（月曜 + 1日）
     const deadline = addDays(weekStart, 1);
-    deadline.setHours(20, 59, 59, 999);
+    deadline.setHours(21, 0, 0, 0);
     return deadline;
   }
 }

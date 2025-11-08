@@ -161,18 +161,17 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
             <p className="text-sm text-orange-600 font-medium">
               ⏰ 申込締切: {(() => {
                 const eventDate = new Date(event.event_date);
-                const eventDateTime = new Date(eventDate);
-                const dayOfWeek = eventDateTime.getDay();
+                const dayOfWeek = eventDate.getDay();
                 const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-                const weekStart = new Date(eventDateTime);
+                const weekStart = new Date(eventDate);
                 weekStart.setDate(weekStart.getDate() + daysToMonday);
                 weekStart.setHours(0, 0, 0, 0);
 
                 // イベントタイプに応じた締切
                 const deadline = new Date(weekStart);
                 if (event.event_type === 'gap') {
-                  // 狭間: 日曜日 21:00（週の最後 = 月曜 + 6日）
-                  deadline.setDate(deadline.getDate() + 6);
+                  // 狭間: 前の週の日曜日 21:00（月曜 - 1日 = 前週の日曜）
+                  deadline.setDate(deadline.getDate() - 1);
                   deadline.setHours(21, 0, 0, 0);
                 } else {
                   // 砂漠: 火曜日 21:00（月曜 + 1日）
