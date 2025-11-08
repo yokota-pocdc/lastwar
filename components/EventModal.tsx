@@ -171,25 +171,22 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
                 // イベントタイプに応じた締切
                 const deadline = new Date(weekStart);
                 if (event.event_type === 'gap') {
-                  // 狭間: 日曜日 23:59（週の最後 = 月曜 + 6日）
+                  // 狭間: 日曜日 21:00（週の最後 = 月曜 + 6日）
                   deadline.setDate(deadline.getDate() + 6);
-                  deadline.setHours(23, 59, 59, 999);
+                  deadline.setHours(21, 0, 0, 0);
                 } else {
-                  // 砂漠: 火曜日 23:59（月曜 + 1日）
+                  // 砂漠: 火曜日 21:00（月曜 + 1日）
                   deadline.setDate(deadline.getDate() + 1);
-                  deadline.setHours(23, 59, 59, 999);
+                  deadline.setHours(21, 0, 0, 0);
                 }
 
-                const deadlineText = event.event_type === 'gap' ? '日曜日23:59' : '火曜日23:59';
-
                 return deadline.toLocaleString('ja-JP', {
-                  year: 'numeric',
-                  month: 'long',
+                  month: 'numeric',
                   day: 'numeric',
-                  weekday: 'long',
+                  weekday: 'short',
                   hour: '2-digit',
                   minute: '2-digit'
-                }) + `（連盟ルール: ${deadlineText}）`;
+                });
               })()}
             </p>
           </div>
@@ -297,7 +294,7 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
                     <p className="text-sm text-gray-600 mt-2">での参加となります</p>
                   </div>
                   <p className="text-sm text-gray-600 mb-4">
-                    ※{event.event_group?.split('-')[0]}の{event.team === 'A' ? 'B' : 'A'}には申し込めません
+                    {event.event_group?.split('-')[0]}{event.team}にエントリーすると{event.event_group?.split('-')[0]}{event.team === 'A' ? 'B' : 'A'}にはエントリーできません
                   </p>
                   <button
                     onClick={handleApplyClick}

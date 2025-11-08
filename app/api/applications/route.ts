@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
     }
 
     // エントリー期間とイベント週のチェック
-    // 砂漠：月曜11:00～火曜23:59に今週のイベント
-    // 狭間：土曜11:00～日曜23:59に来週のイベント
+    // 砂漠：日曜21:00～火曜21:00に今週のイベント
+    // 狭間：金曜21:00～日曜21:00に来週のイベント
     if (!canApplyToEvent(event.event_date, event.event_type)) {
       const errorMessage = event.event_type === 'desert'
-        ? '砂漠イベントの申し込みは月曜11:00～火曜23:59の間のみ可能です'
-        : '狭間イベントの申し込みは土曜11:00～日曜23:59の間のみ可能です（翌週イベント）';
+        ? '砂漠イベントの申し込みは日曜21:00～火曜21:00の間のみ可能です'
+        : '狭間イベントの申し込みは金曜21:00～日曜21:00の間のみ可能です';
       return NextResponse.json({
         error: errorMessage
       }, { status: 400 });
