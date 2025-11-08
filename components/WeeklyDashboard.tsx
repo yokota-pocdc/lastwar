@@ -280,8 +280,8 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 rounded-t-lg shadow-md">
         <h2 className="text-2xl font-bold mb-2">今週のエントリー状況</h2>
         <div className="text-sm opacity-90">
-          <div>🏜️ 砂漠: 金曜21:00～日曜21:00</div>
-          <div>⚔️ 狭間: 日曜21:00～火曜21:00（翌週イベント）</div>
+          <div>🏜️ 砂漠: 日曜21:00～火曜21:00</div>
+          <div>⚔️ 狭間: 金曜21:00～日曜21:00（翌週イベント）</div>
         </div>
       </div>
 

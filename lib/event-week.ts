@@ -60,8 +60,8 @@ export function getEventWeek(eventDate: string): { start: Date; end: Date } {
 
 /**
  * エントリー期間かどうかをチェック
- * 砂漠：金曜21:00～日曜21:00
- * 狭間：日曜21:00～火曜21:00
+ * 砂漠：日曜21:00～火曜21:00
+ * 狭間：金曜21:00～日曜21:00
  */
 export function isInEntryPeriod(eventType: 'desert' | 'gap', now: Date = new Date()): boolean {
   const dayOfWeek = now.getDay(); // 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
@@ -69,22 +69,7 @@ export function isInEntryPeriod(eventType: 'desert' | 'gap', now: Date = new Dat
   const minutes = now.getMinutes();
 
   if (eventType === 'desert') {
-    // 砂漠：金曜21:00～日曜21:00
-    if (dayOfWeek === 5 && hours >= 21) {
-      // 金曜21:00以降
-      return true;
-    }
-    if (dayOfWeek === 6) {
-      // 土曜日全体
-      return true;
-    }
-    if (dayOfWeek === 0 && hours < 21) {
-      // 日曜0:00～20:59
-      return true;
-    }
-    return false;
-  } else {
-    // 狭間：日曜21:00～火曜21:00
+    // 砂漠：日曜21:00～火曜21:00
     if (dayOfWeek === 0 && hours >= 21) {
       // 日曜21:00以降
       return true;
@@ -98,19 +83,34 @@ export function isInEntryPeriod(eventType: 'desert' | 'gap', now: Date = new Dat
       return true;
     }
     return false;
+  } else {
+    // 狭間：金曜21:00～日曜21:00
+    if (dayOfWeek === 5 && hours >= 21) {
+      // 金曜21:00以降
+      return true;
+    }
+    if (dayOfWeek === 6) {
+      // 土曜日全体
+      return true;
+    }
+    if (dayOfWeek === 0 && hours < 21) {
+      // 日曜0:00～20:59
+      return true;
+    }
+    return false;
   }
 }
 
 /**
  * 狭間イベント用：表示対象週を取得
- * 日曜21:00～火曜21:00の間は翌週のイベントを表示
+ * 金曜21:00～日曜21:00の間は翌週のイベントを表示
  * それ以外は今週のイベントを表示
  */
 export function getGapEventTargetWeek(now: Date = new Date()): { start: Date; end: Date } {
   const currentWeek = getCurrentEventWeek();
 
   if (isInEntryPeriod('gap', now)) {
-    // エントリー期間中（日曜21:00～火曜21:00）は翌週のイベントを対象
+    // エントリー期間中（金曜21:00～日曜21:00）は翌週のイベントを対象
     return {
       start: addWeeks(currentWeek.start, 1),
       end: addWeeks(currentWeek.end, 1),
@@ -123,8 +123,8 @@ export function getGapEventTargetWeek(now: Date = new Date()): { start: Date; en
 
 /**
  * イベントが申し込み可能かチェック
- * 砂漠：金曜21:00～日曜21:00の間に今週のイベントに申し込める
- * 狭間：日曜21:00～火曜21:00の間に来週のイベントに申し込める
+ * 砂漠：日曜21:00～火曜21:00の間に今週のイベントに申し込める
+ * 狭間：金曜21:00～日曜21:00の間に来週のイベントに申し込める
  */
 export function canApplyToEvent(eventDate: string, eventType: 'desert' | 'gap', now: Date = new Date()): boolean {
   // エントリー期間外なら申し込み不可
