@@ -143,6 +143,27 @@ export default function AdminPage() {
     }
   };
 
+  const handleResetTickets = async () => {
+    const confirmMessage = '全ユーザーのチケットを2枚にリセットします。\n\nこの操作を実行しますか？';
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      const res = await fetch('/api/admin/reset-tickets', {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`チケットリセット完了\n\n対象ユーザー数: ${data.affectedUsers}人\nすべてのユーザーのチケットが2枚になりました。`);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'リセットに失敗しました');
+      }
+    } catch (error) {
+      alert('エラーが発生しました');
+    }
+  };
+
   const handleClearApplications = async () => {
     const confirmMessage = '【警告】すべてのデータを削除します。\n・申し込みデータ\n・ユーザー情報\n・サイコロ履歴\n・イベントデータ\n\n※Googleカレンダーから再同期できます\n※実行後は自動的にログアウトされます\n\nこの操作は取り消せません。\n本当に実行しますか？';
     if (!confirm(confirmMessage)) return;
@@ -245,6 +266,12 @@ export default function AdminPage() {
         {/* カレンダービュー */}
         <div className="mb-6">
           <div className="mb-4 flex flex-col sm:flex-row justify-end gap-2">
+            <button
+              onClick={handleResetTickets}
+              className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-md text-sm sm:text-base"
+            >
+              🎟️ 全員チケット2枚にリセット
+            </button>
             <button
               onClick={handleClearApplications}
               className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-md text-sm sm:text-base"

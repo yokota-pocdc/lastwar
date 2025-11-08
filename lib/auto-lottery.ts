@@ -3,9 +3,9 @@ import { executeLottery, Application } from './lottery';
 import { startOfWeek, addDays } from 'date-fns';
 
 /**
- * イベントの締め切り日時を計算（連盟ルール）
- * - 砂漠: 火曜日 23:59:59
- * - 狭間: 日曜日 23:59:59（システム締切が火曜14:00のため）
+ * イベントの締め切り日時を計算
+ * - 砂漠: 日曜日 20:59:59
+ * - 狭間: 火曜日 20:59:59
  * イベントが属する週の締切日時
  */
 export function getDeadline(eventDate: string, eventType: 'desert' | 'gap'): Date {
@@ -15,14 +15,14 @@ export function getDeadline(eventDate: string, eventType: 'desert' | 'gap'): Dat
   const weekStart = startOfWeek(eventDateTime, { weekStartsOn: 1 }); // 月曜始まり
 
   if (eventType === 'gap') {
-    // 狭間: 日曜日 23:59:59（月曜 + 6日 = 次の日曜）
-    const deadline = addDays(weekStart, 6);
-    deadline.setHours(23, 59, 59, 999);
+    // 狭間: 火曜日 20:59:59（月曜 + 1日）
+    const deadline = addDays(weekStart, 1);
+    deadline.setHours(20, 59, 59, 999);
     return deadline;
   } else {
-    // 砂漠: 火曜日 23:59:59（月曜 + 1日）
-    const deadline = addDays(weekStart, 1);
-    deadline.setHours(23, 59, 59, 999);
+    // 砂漠: 日曜日 20:59:59（月曜 + 6日 = 次の日曜）
+    const deadline = addDays(weekStart, 6);
+    deadline.setHours(20, 59, 59, 999);
     return deadline;
   }
 }
