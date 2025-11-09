@@ -5,8 +5,9 @@ import { rollDice, calculateTotalScore } from '@/lib/lottery';
 import { getRemainingTickets, useTicket } from '@/lib/tickets';
 import { updateRealtimeRankings, getUserRanking } from '@/lib/realtime-lottery';
 import { autoUpdateEventStatus, isEventOpen } from '@/lib/auto-lottery';
-import { getWeeklyDiceByEventDate, saveWeeklyDiceByEventDate } from '@/lib/weekly-dice';
-import { canApplyToEvent } from '@/lib/event-week';
+import { getWeeklyDice, saveWeeklyDice } from '@/lib/weekly-dice';
+import { canApplyToEvent, getDesertEventTargetWeek, getGapEventTargetWeek } from '@/lib/event-week';
+import { getYear, getWeek } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,7 +84,14 @@ export async function POST(request: NextRequest) {
     let usedTicket = false;
     let totalScore: number;
 
-    const weeklyDice = getWeeklyDiceByEventDate(session.userId, event.event_date);
+    // イベントタイプに応じて対象週を取得
+    const targetWeek = event.event_type === 'desert'
+      ? getDesertEventTargetWeek()
+      : getGapEventTargetWeek();
+    const year = getYear(targetWeek.start);
+    const week = getWeek(targetWeek.start, { weekStartsOn: 1 });
+
+    const weeklyDice = getWeeklyDice(session.userId, year, week);
 
     if (weeklyDice) {
       // 既にこの週のサイコロがある場合は再利用
@@ -119,9 +127,10 @@ export async function POST(request: NextRequest) {
       totalScore = calculateTotalScore(diceScore, usedTicket);
 
       // 週単位のサイコロを保存
-      saveWeeklyDiceByEventDate({
+      saveWeeklyDice({
         userId: session.userId,
-        eventDate: event.event_date,
+        year,
+        week,
         dice1,
         dice2,
         diceScore,
