@@ -89,7 +89,18 @@ export async function POST(request: NextRequest) {
     const year = getYear(currentWeek.start);
     const week = getWeek(currentWeek.start, { weekStartsOn: 1 });
 
+    console.log('=== サイコロ週判定デバッグ ===');
+    console.log('現在時刻:', new Date().toISOString());
+    console.log('イベントタイプ:', event.event_type);
+    console.log('イベント日:', event.event_date);
+    console.log('currentWeek.start:', currentWeek.start.toISOString());
+    console.log('currentWeek.end:', currentWeek.end.toISOString());
+    console.log('検索する週番号: year=' + year + ', week=' + week);
+
     const weeklyDice = getWeeklyDice(session.userId, year, week);
+
+    console.log('見つかったサイコロ:', weeklyDice ? `year=${weeklyDice.year}, week=${weeklyDice.week}, score=${weeklyDice.total_score}` : 'なし');
+    console.log('=============================');
 
     if (weeklyDice) {
       // 既にこの週のサイコロがある場合は再利用
