@@ -7,12 +7,11 @@ interface DiceRollerProps {
   applicationId?: number;
   selectedTeam: 'A' | 'B';
   eventDate: string;
-  eventType: 'desert' | 'gap';
   onComplete: (application: any) => void;
   onCancel: () => void;
 }
 
-export default function DiceRoller({ eventId, applicationId, selectedTeam, eventDate, eventType, onComplete, onCancel }: DiceRollerProps) {
+export default function DiceRoller({ eventId, applicationId, selectedTeam, eventDate, onComplete, onCancel }: DiceRollerProps) {
   const [tickets, setTickets] = useState(0);
   const [useTicket, setUseTicket] = useState(false);
   const [allowAlternativeIfRejected, setAllowAlternativeIfRejected] = useState(false);
@@ -41,7 +40,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
 
   const fetchWeeklyDice = async () => {
     try {
-      const res = await fetch(`/api/weekly-dice?eventDate=${encodeURIComponent(eventDate)}&eventType=${eventType}`);
+      const res = await fetch(`/api/weekly-dice?eventDate=${encodeURIComponent(eventDate)}`);
       const data = await res.json();
       if (res.ok) {
         setWeeklyDice(data.weeklyDice);

@@ -315,7 +315,6 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
               eventId={event.id}
               selectedTeam={application?.preferred_team || event.team}
               eventDate={event.event_date}
-              eventType={event.event_type}
               onComplete={handleApplicationComplete}
               onCancel={() => setShowDiceRoller(false)}
             />

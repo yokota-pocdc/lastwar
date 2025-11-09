@@ -6,7 +6,7 @@ import { getRemainingTickets, useTicket } from '@/lib/tickets';
 import { updateRealtimeRankings, getUserRanking } from '@/lib/realtime-lottery';
 import { autoUpdateEventStatus, isEventOpen } from '@/lib/auto-lottery';
 import { getWeeklyDice, saveWeeklyDice } from '@/lib/weekly-dice';
-import { canApplyToEvent, getDesertEventTargetWeek, getGapEventTargetWeek } from '@/lib/event-week';
+import { canApplyToEvent, getEventWeek } from '@/lib/event-week';
 import { getYear, getWeek } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
@@ -84,12 +84,10 @@ export async function POST(request: NextRequest) {
     let usedTicket = false;
     let totalScore: number;
 
-    // イベントタイプに応じて対象週を取得
-    const targetWeek = event.event_type === 'desert'
-      ? getDesertEventTargetWeek()
-      : getGapEventTargetWeek();
-    const year = getYear(targetWeek.start);
-    const week = getWeek(targetWeek.start, { weekStartsOn: 1 });
+    // イベントが属する週を取得（イベント日から計算）
+    const eventWeek = getEventWeek(event.event_date);
+    const year = getYear(eventWeek.start);
+    const week = getWeek(eventWeek.start, { weekStartsOn: 1 });
 
     const weeklyDice = getWeeklyDice(session.userId, year, week);
 
