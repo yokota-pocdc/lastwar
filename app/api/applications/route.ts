@@ -6,7 +6,7 @@ import { getRemainingTickets, useTicket } from '@/lib/tickets';
 import { updateRealtimeRankings, getUserRanking } from '@/lib/realtime-lottery';
 import { autoUpdateEventStatus, isEventOpen } from '@/lib/auto-lottery';
 import { getWeeklyDice, saveWeeklyDice } from '@/lib/weekly-dice';
-import { canApplyToEvent, getCurrentEventWeek } from '@/lib/event-week';
+import { canApplyToEvent, getEventWeek } from '@/lib/event-week';
 import { getYear, getWeek } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
@@ -84,17 +84,17 @@ export async function POST(request: NextRequest) {
     let usedTicket = false;
     let totalScore: number;
 
-    // エントリーしている現在の週を取得
-    const currentWeek = getCurrentEventWeek();
-    const year = getYear(currentWeek.start);
-    const week = getWeek(currentWeek.start, { weekStartsOn: 1 });
+    // イベントが開催される週を取得（イベント日から計算）
+    const eventWeek = getEventWeek(event.event_date);
+    const year = getYear(eventWeek.start);
+    const week = getWeek(eventWeek.start, { weekStartsOn: 1 });
 
     console.log('=== サイコロ週判定デバッグ ===');
     console.log('現在時刻:', new Date().toISOString());
     console.log('イベントタイプ:', event.event_type);
     console.log('イベント日:', event.event_date);
-    console.log('currentWeek.start:', currentWeek.start.toISOString());
-    console.log('currentWeek.end:', currentWeek.end.toISOString());
+    console.log('eventWeek.start:', eventWeek.start.toISOString());
+    console.log('eventWeek.end:', eventWeek.end.toISOString());
     console.log('検索する週番号: year=' + year + ', week=' + week);
 
     const weeklyDice = getWeeklyDice(session.userId, year, week);

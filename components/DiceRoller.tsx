@@ -40,7 +40,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
 
   const fetchWeeklyDice = async () => {
     try {
-      const res = await fetch('/api/weekly-dice');
+      const res = await fetch(`/api/weekly-dice?eventDate=${encodeURIComponent(eventDate)}`);
       const data = await res.json();
       if (res.ok) {
         setWeeklyDice(data.weeklyDice);
