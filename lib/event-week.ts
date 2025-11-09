@@ -103,20 +103,29 @@ export function isInEntryPeriod(eventType: 'desert' | 'gap', now: Date = new Dat
 
 /**
  * 狭間イベント用：表示対象週を取得
- * 金曜21:00～日曜21:00の間は翌週のイベントを表示
+ * 金曜21:00～月曜10:59の間は翌週のイベントを表示
  * それ以外は今週のイベントを表示
  */
 export function getGapEventTargetWeek(now: Date = new Date()): { start: Date; end: Date } {
   const currentWeek = getCurrentEventWeek();
+  const dayOfWeek = now.getDay(); // 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
+  const hours = now.getHours();
 
-  if (isInEntryPeriod('gap', now)) {
-    // エントリー期間中（金曜21:00～日曜21:00）は翌週のイベントを対象
+  // 金曜21:00～月曜10:59の間は翌週のイベントを対象
+  const showNextWeek =
+    (dayOfWeek === 5 && hours >= 21) || // 金曜21:00以降
+    (dayOfWeek === 6) ||                 // 土曜日全体
+    (dayOfWeek === 0) ||                 // 日曜日全体
+    (dayOfWeek === 1 && hours < 11);    // 月曜0:00～10:59
+
+  if (showNextWeek) {
+    // 翌週のイベントを対象
     return {
       start: addWeeks(currentWeek.start, 1),
       end: addWeeks(currentWeek.end, 1),
     };
   } else {
-    // それ以外は今週のイベント
+    // 今週のイベント
     return currentWeek;
   }
 }
