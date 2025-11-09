@@ -6,6 +6,7 @@ export interface WeeklyDice {
   user_id: number;
   year: number;
   week: number;
+  event_type: 'desert' | 'gap';
   dice1: number;
   dice2: number;
   dice_score: number;
@@ -29,21 +30,13 @@ export function getWeekInfo(eventDate: string): { year: number; week: number } {
 /**
  * 特定の週のサイコロを取得
  */
-export function getWeeklyDice(userId: number, year: number, week: number): WeeklyDice | null {
+export function getWeeklyDice(userId: number, year: number, week: number, eventType: 'desert' | 'gap'): WeeklyDice | null {
   const dice = db.prepare(`
     SELECT * FROM user_dice_weekly
-    WHERE user_id = ? AND year = ? AND week = ?
-  `).get(userId, year, week) as WeeklyDice | undefined;
+    WHERE user_id = ? AND year = ? AND week = ? AND event_type = ?
+  `).get(userId, year, week, eventType) as WeeklyDice | undefined;
 
   return dice || null;
-}
-
-/**
- * イベント日から週のサイコロを取得
- */
-export function getWeeklyDiceByEventDate(userId: number, eventDate: string): WeeklyDice | null {
-  const { year, week } = getWeekInfo(eventDate);
-  return getWeeklyDice(userId, year, week);
 }
 
 /**
@@ -53,6 +46,7 @@ export function saveWeeklyDice(params: {
   userId: number;
   year: number;
   week: number;
+  eventType: 'desert' | 'gap';
   dice1: number;
   dice2: number;
   diceScore: number;
@@ -60,7 +54,7 @@ export function saveWeeklyDice(params: {
   usedTicket: boolean;
   totalScore: number;
 }): WeeklyDice {
-  const existing = getWeeklyDice(params.userId, params.year, params.week);
+  const existing = getWeeklyDice(params.userId, params.year, params.week, params.eventType);
 
   if (existing) {
     // 更新
@@ -68,7 +62,7 @@ export function saveWeeklyDice(params: {
       UPDATE user_dice_weekly
       SET dice1 = ?, dice2 = ?, dice_score = ?, is_doubles = ?,
           used_ticket = ?, total_score = ?, updated_at = ?
-      WHERE user_id = ? AND year = ? AND week = ?
+      WHERE user_id = ? AND year = ? AND week = ? AND event_type = ?
     `).run(
       params.dice1,
       params.dice2,
@@ -79,21 +73,23 @@ export function saveWeeklyDice(params: {
       new Date().toISOString(),
       params.userId,
       params.year,
-      params.week
+      params.week,
+      params.eventType
     );
 
-    return getWeeklyDice(params.userId, params.year, params.week)!;
+    return getWeeklyDice(params.userId, params.year, params.week, params.eventType)!;
   } else {
     // 新規作成
     const result = db.prepare(`
       INSERT INTO user_dice_weekly (
-        user_id, year, week, dice1, dice2, dice_score,
+        user_id, year, week, event_type, dice1, dice2, dice_score,
         is_doubles, used_ticket, total_score
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       params.userId,
       params.year,
       params.week,
+      params.eventType,
       params.dice1,
       params.dice2,
       params.diceScore,
@@ -104,32 +100,4 @@ export function saveWeeklyDice(params: {
 
     return db.prepare('SELECT * FROM user_dice_weekly WHERE id = ?').get(result.lastInsertRowid) as WeeklyDice;
   }
-}
-
-/**
- * イベント日から週のサイコロを保存
- */
-export function saveWeeklyDiceByEventDate(params: {
-  userId: number;
-  eventDate: string;
-  dice1: number;
-  dice2: number;
-  diceScore: number;
-  isDoubles: boolean;
-  usedTicket: boolean;
-  totalScore: number;
-}): WeeklyDice {
-  const { year, week } = getWeekInfo(params.eventDate);
-
-  return saveWeeklyDice({
-    userId: params.userId,
-    year,
-    week,
-    dice1: params.dice1,
-    dice2: params.dice2,
-    diceScore: params.diceScore,
-    isDoubles: params.isDoubles,
-    usedTicket: params.usedTicket,
-    totalScore: params.totalScore,
-  });
 }

@@ -95,11 +95,11 @@ export async function POST(request: NextRequest) {
     console.log('イベント日:', event.event_date);
     console.log('eventWeek.start:', eventWeek.start.toISOString());
     console.log('eventWeek.end:', eventWeek.end.toISOString());
-    console.log('検索する週番号: year=' + year + ', week=' + week);
+    console.log('検索する週番号: year=' + year + ', week=' + week + ', eventType=' + event.event_type);
 
-    const weeklyDice = getWeeklyDice(session.userId, year, week);
+    const weeklyDice = getWeeklyDice(session.userId, year, week, event.event_type);
 
-    console.log('見つかったサイコロ:', weeklyDice ? `year=${weeklyDice.year}, week=${weeklyDice.week}, score=${weeklyDice.total_score}` : 'なし');
+    console.log('見つかったサイコロ:', weeklyDice ? `year=${weeklyDice.year}, week=${weeklyDice.week}, eventType=${weeklyDice.event_type}, score=${weeklyDice.total_score}` : 'なし');
     console.log('=============================');
 
     if (weeklyDice) {
@@ -140,6 +140,7 @@ export async function POST(request: NextRequest) {
         userId: session.userId,
         year,
         week,
+        eventType: event.event_type,
         dice1,
         dice2,
         diceScore,
