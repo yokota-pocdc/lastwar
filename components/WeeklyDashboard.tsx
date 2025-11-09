@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isWithinInterval } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import EntryListModal from './EntryListModal';
-import { getCurrentEventWeek, getGapEventTargetWeek, isInEntryPeriod } from '@/lib/event-week';
+import { getCurrentEventWeek, getDesertEventTargetWeek, getGapEventTargetWeek, isInEntryPeriod } from '@/lib/event-week';
 
 interface Event {
   id: number;
@@ -80,12 +80,12 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
     }
   };
 
-  // 砂漠イベント：今週のイベント
-  const currentWeek = getCurrentEventWeek();
+  // 砂漠イベント：日曜21:00～月曜10:59は来週、それ以外は今週
+  const desertTargetWeek = getDesertEventTargetWeek();
   const desertEvents = events.filter(event => {
     if (event.event_type !== 'desert') return false;
     const eventDate = new Date(event.event_date);
-    return isWithinInterval(eventDate, { start: currentWeek.start, end: currentWeek.end });
+    return isWithinInterval(eventDate, { start: desertTargetWeek.start, end: desertTargetWeek.end });
   });
 
   // 狭間イベント：土日エントリー期間中は来週、それ以外は今週

@@ -102,6 +102,33 @@ export function isInEntryPeriod(eventType: 'desert' | 'gap', now: Date = new Dat
 }
 
 /**
+ * 砂漠イベント用：表示対象週を取得
+ * 日曜21:00～月曜10:59の間は翌週のイベントを表示
+ * それ以外は今週のイベントを表示
+ */
+export function getDesertEventTargetWeek(now: Date = new Date()): { start: Date; end: Date } {
+  const currentWeek = getCurrentEventWeek();
+  const dayOfWeek = now.getDay(); // 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
+  const hours = now.getHours();
+
+  // 日曜21:00～月曜10:59の間は翌週のイベントを対象
+  const showNextWeek =
+    (dayOfWeek === 0 && hours >= 21) || // 日曜21:00以降
+    (dayOfWeek === 1 && hours < 11);    // 月曜0:00～10:59
+
+  if (showNextWeek) {
+    // 翌週のイベントを対象
+    return {
+      start: addWeeks(currentWeek.start, 1),
+      end: addWeeks(currentWeek.end, 1),
+    };
+  } else {
+    // 今週のイベント
+    return currentWeek;
+  }
+}
+
+/**
  * 狭間イベント用：表示対象週を取得
  * 金曜21:00～月曜10:59の間は翌週のイベントを表示
  * それ以外は今週のイベントを表示
@@ -132,8 +159,8 @@ export function getGapEventTargetWeek(now: Date = new Date()): { start: Date; en
 
 /**
  * イベントが申し込み可能かチェック
- * 砂漠：日曜21:00～火曜21:00の間に今週のイベントに申し込める
- * 狭間：金曜21:00～日曜21:00の間に来週のイベントに申し込める
+ * 砂漠：日曜21:00～火曜21:00の間に対象週のイベントに申し込める
+ * 狭間：金曜21:00～日曜21:00の間に対象週のイベントに申し込める
  */
 export function canApplyToEvent(eventDate: string, eventType: 'desert' | 'gap', now: Date = new Date()): boolean {
   // エントリー期間外なら申し込み不可
@@ -144,16 +171,12 @@ export function canApplyToEvent(eventDate: string, eventType: 'desert' | 'gap', 
   const event = new Date(eventDate);
 
   if (eventType === 'desert') {
-    // 砂漠：今週のイベントに申し込める
-    const currentWeek = getCurrentEventWeek();
-    return isWithinInterval(event, { start: currentWeek.start, end: currentWeek.end });
+    // 砂漠：対象週のイベントに申し込める
+    const targetWeek = getDesertEventTargetWeek(now);
+    return isWithinInterval(event, { start: targetWeek.start, end: targetWeek.end });
   } else {
-    // 狭間：来週のイベントに申し込める
-    const currentWeek = getCurrentEventWeek();
-    const nextWeek = {
-      start: addWeeks(currentWeek.start, 1),
-      end: addWeeks(currentWeek.end, 1),
-    };
-    return isWithinInterval(event, { start: nextWeek.start, end: nextWeek.end });
+    // 狭間：対象週のイベントに申し込める
+    const targetWeek = getGapEventTargetWeek(now);
+    return isWithinInterval(event, { start: targetWeek.start, end: targetWeek.end });
   }
 }
