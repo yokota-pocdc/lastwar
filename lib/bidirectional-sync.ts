@@ -67,10 +67,11 @@ export async function detectInconsistencies(): Promise<{
     googleEvents.filter(e => e?.googleEventId).map(e => [e!.googleEventId, e])
   );
 
-  // DBからイベントを取得
+  // DBからイベントを取得（終了イベントを除外）
   const dbEvents = db.prepare(`
     SELECT * FROM events
     WHERE datetime(event_date) > datetime('now', '-30 days')
+      AND status != 'finished'
   `).all() as Event[];
 
   // 1. DB側にあるがGoogleカレンダー側にないイベント
