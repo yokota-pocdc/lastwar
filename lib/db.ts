@@ -39,6 +39,7 @@ export function initializeDatabase() {
       participants_limit INTEGER DEFAULT 20,
       status TEXT DEFAULT 'open' CHECK(status IN ('open', 'closed', 'finished')),
       lottery_executed INTEGER DEFAULT 0,
+      use_team_b INTEGER DEFAULT 1,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -58,6 +59,12 @@ export function initializeDatabase() {
 
   try {
     db.exec(`ALTER TABLE events ADD COLUMN google_event_id TEXT UNIQUE`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
+
+  try {
+    db.exec(`ALTER TABLE events ADD COLUMN use_team_b INTEGER DEFAULT 1`);
   } catch (e) {
     // カラムが既に存在する場合は無視
   }
