@@ -6,10 +6,10 @@ import DiceRoller from './DiceRoller';
 interface Event {
   id: number;
   title: string;
-  event_type: 'desert' | 'gap';
+  event_type: 'desert' | 'gap' | 'irregular';
   event_date: string;
-  team: 'A' | 'B';
-  event_group: string;
+  team?: 'A' | 'B' | null;
+  event_group?: string;
   status: 'open' | 'closed' | 'finished';
   lottery_executed?: number;
   google_event_id?: string;
@@ -19,14 +19,16 @@ interface Application {
   id: number;
   dice1: number;
   dice2: number;
+  dice3?: number;
   dice_score: number;
   used_ticket: number;
   total_score: number;
   is_doubles: number;
   rerolled: number;
-  preferred_team: 'A' | 'B';
+  preferred_team?: 'A' | 'B' | null;
   result_team?: string;
   result_status?: string;
+  result_rank?: number;
 }
 
 interface EventModalProps {
@@ -39,6 +41,8 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
+
+  const isIrregular = event.event_type === 'irregular';
 
   useEffect(() => {
     fetchApplication();
@@ -127,11 +131,15 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-2xl font-bold mb-2">{event.title}</h2>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <span className={`px-3 py-1 rounded-full text-white text-sm ${
-                  event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
+                  isIrregular
+                    ? 'bg-pink-500'
+                    : event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
                 }`}>
-                  {event.event_type === 'desert' ? '砂漠の戦場' : '狭間の戦場'}
+                  {isIrregular
+                    ? '不定期イベント'
+                    : event.event_type === 'desert' ? '砂漠の戦場' : '狭間の戦場'}
                 </span>
                 <span className={`px-3 py-1 rounded-full text-white text-sm ${
                   event.status === 'open' ? 'bg-green-500' : 'bg-gray-500'
@@ -158,40 +166,49 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
                 minute: '2-digit'
               })}
             </p>
-            <p className="text-sm text-orange-600 font-medium">
-              ⏰ 申込締切: {(() => {
-                const eventDate = new Date(event.event_date);
-                const eventDateTime = new Date(eventDate);
-                const dayOfWeek = eventDateTime.getDay();
-                const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-                const weekStart = new Date(eventDateTime);
-                weekStart.setDate(weekStart.getDate() + daysToMonday);
-                weekStart.setHours(0, 0, 0, 0);
+            {isIrregular ? (
+              <div className="text-sm text-pink-600 font-medium">
+                <p>⏰ 申込締切: イベント開始時刻まで</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  ※このイベントはサイコロ3つで順位を決定します。同点の場合は自動抽選で順位が決まります。
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-orange-600 font-medium">
+                ⏰ 申込締切: {(() => {
+                  const eventDate = new Date(event.event_date);
+                  const eventDateTime = new Date(eventDate);
+                  const dayOfWeek = eventDateTime.getDay();
+                  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+                  const weekStart = new Date(eventDateTime);
+                  weekStart.setDate(weekStart.getDate() + daysToMonday);
+                  weekStart.setHours(0, 0, 0, 0);
 
-                // イベントタイプに応じた締切
-                const deadline = new Date(weekStart);
-                if (event.event_type === 'gap') {
-                  // 狭間: 日曜日 23:59（週の最後 = 月曜 + 6日）
-                  deadline.setDate(deadline.getDate() + 6);
-                  deadline.setHours(23, 59, 59, 999);
-                } else {
-                  // 砂漠: 火曜日 23:59（月曜 + 1日）
-                  deadline.setDate(deadline.getDate() + 1);
-                  deadline.setHours(23, 59, 59, 999);
-                }
+                  // イベントタイプに応じた締切
+                  const deadline = new Date(weekStart);
+                  if (event.event_type === 'gap') {
+                    // 狭間: 日曜日 23:59（週の最後 = 月曜 + 6日）
+                    deadline.setDate(deadline.getDate() + 6);
+                    deadline.setHours(23, 59, 59, 999);
+                  } else {
+                    // 砂漠: 火曜日 23:59（月曜 + 1日）
+                    deadline.setDate(deadline.getDate() + 1);
+                    deadline.setHours(23, 59, 59, 999);
+                  }
 
-                const deadlineText = event.event_type === 'gap' ? '日曜日23:59' : '火曜日23:59';
+                  const deadlineText = event.event_type === 'gap' ? '日曜日23:59' : '火曜日23:59';
 
-                return deadline.toLocaleString('ja-JP', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'long',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }) + `（連盟ルール: ${deadlineText}）`;
-              })()}
-            </p>
+                  return deadline.toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  }) + `（連盟ルール: ${deadlineText}）`;
+                })()}
+              </p>
+            )}
           </div>
 
           {loading ? (
@@ -200,11 +217,28 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-4 text-gray-900">あなたの申込内容</h3>
 
-              <div className="mb-3 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg">
-                <span className="font-bold text-gray-900">希望チーム: チーム{application.preferred_team}</span>
-              </div>
+              {/* 定期イベントのチーム表示 */}
+              {!isIrregular && application.preferred_team && (
+                <div className="mb-3 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg">
+                  <span className="font-bold text-gray-900">希望チーム: チーム{application.preferred_team}</span>
+                </div>
+              )}
 
-              {application.result_status && (
+              {/* 非定期イベントの順位表示 */}
+              {isIrregular && application.result_rank && (
+                <div className="mb-3 bg-pink-50 border-2 border-pink-400 p-4 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600">現在の順位</div>
+                    <div className="text-3xl font-bold text-pink-600">{application.result_rank}位</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      ※同点の場合、最終結果で自動抽選が行われます
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 定期イベントのステータス表示 */}
+              {!isIrregular && application.result_status && (
                 <div className={`mb-3 p-4 rounded-lg border-2 ${
                   application.result_status === 'participant' ? 'bg-green-50 border-green-400' :
                   application.result_status === 'candidate' ? 'bg-yellow-50 border-yellow-400' :
@@ -241,8 +275,20 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
                   <div>
                     <div className="text-2xl font-bold">
                       [{application.dice1}] [{application.dice2}]
-                      {application.is_doubles === 1 && (
-                        <span className="ml-2 text-red-600">ゾロ目! ×2</span>
+                      {isIrregular && application.dice3 && ` [${application.dice3}]`}
+                      {isIrregular ? (
+                        <>
+                          {application.is_doubles === 2 && (
+                            <span className="ml-2 text-red-600">トリプル! ×3</span>
+                          )}
+                          {application.is_doubles === 1 && (
+                            <span className="ml-2 text-orange-600">ゾロ目! ×2</span>
+                          )}
+                        </>
+                      ) : (
+                        application.is_doubles === 1 && (
+                          <span className="ml-2 text-red-600">ゾロ目! ×2</span>
+                        )
                       )}
                     </div>
                     <div className="text-sm text-gray-600">
@@ -251,19 +297,19 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
                   </div>
                 </div>
 
-                {application.used_ticket === 1 && (
+                {!isIrregular && application.used_ticket === 1 && (
                   <div className="bg-yellow-100 border-2 border-yellow-400 p-3 rounded-lg">
                     <span className="text-lg font-bold text-gray-900">🎟️ チケット使用 +12点</span>
                   </div>
                 )}
 
-                <div className="bg-blue-100 border-2 border-blue-400 p-4 rounded-lg">
+                <div className={`${isIrregular ? 'bg-pink-100 border-pink-400' : 'bg-blue-100 border-blue-400'} border-2 p-4 rounded-lg`}>
                   <div className="text-xl font-bold text-gray-900">
                     合計スコア: {application.total_score}点
                   </div>
                 </div>
 
-                {application.result_status && (
+                {!isIrregular && application.result_status && (
                   <div className="mt-4 flex items-center gap-2">
                     <span className="font-semibold">抽選結果:</span>
                     {getStatusBadge(application.result_status)}
@@ -287,26 +333,48 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
             <div className="text-center">
               {event.status === 'open' ? (
                 <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                    <p className="text-sm text-gray-600 mb-2">このイベントは</p>
-                    <div className={`inline-block px-6 py-3 rounded-full text-white text-xl font-bold ${
-                      event.team === 'A' ? 'bg-blue-500' : 'bg-purple-500'
-                    }`}>
-                      チーム{event.team}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-2">での参加となります</p>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    ※{event.event_group?.split('-')[0]}の{event.team === 'A' ? 'B' : 'A'}には申し込めません
-                  </p>
-                  <button
-                    onClick={handleApplyClick}
-                    className={`${
-                      event.team === 'A' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'
-                    } text-white font-bold py-4 px-8 rounded-lg text-xl transition w-full max-w-md`}
-                  >
-                    🎲 チーム{event.team}に申し込む
-                  </button>
+                  {isIrregular ? (
+                    <>
+                      {/* 非定期イベント */}
+                      <div className="bg-pink-50 p-4 rounded-lg mb-4">
+                        <p className="text-sm text-gray-600 mb-2">このイベントは</p>
+                        <div className="inline-block px-6 py-3 rounded-full bg-pink-500 text-white text-xl font-bold">
+                          順位決定イベント
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">サイコロ3つで順位が決まります</p>
+                      </div>
+                      <button
+                        onClick={handleApplyClick}
+                        className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 px-8 rounded-lg text-xl transition w-full max-w-md"
+                      >
+                        🎲 サイコロを3つ振る
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {/* 定期イベント */}
+                      <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                        <p className="text-sm text-gray-600 mb-2">このイベントは</p>
+                        <div className={`inline-block px-6 py-3 rounded-full text-white text-xl font-bold ${
+                          event.team === 'A' ? 'bg-blue-500' : 'bg-purple-500'
+                        }`}>
+                          チーム{event.team}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">での参加となります</p>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4">
+                        ※{event.event_group?.split('-')[0]}の{event.team === 'A' ? 'B' : 'A'}には申し込めません
+                      </p>
+                      <button
+                        onClick={handleApplyClick}
+                        className={`${
+                          event.team === 'A' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'
+                        } text-white font-bold py-4 px-8 rounded-lg text-xl transition w-full max-w-md`}
+                      >
+                        🎲 チーム{event.team}に申し込む
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <p className="text-gray-500">このイベントは受付を終了しています</p>
@@ -317,8 +385,9 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
           {showDiceRoller && (
             <DiceRoller
               eventId={event.id}
-              selectedTeam={application?.preferred_team || event.team}
+              selectedTeam={isIrregular ? null : (application?.preferred_team || event.team)}
               eventDate={event.event_date}
+              eventType={event.event_type}
               onComplete={handleApplicationComplete}
               onCancel={() => setShowDiceRoller(false)}
             />

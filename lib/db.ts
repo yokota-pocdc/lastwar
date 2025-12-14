@@ -25,9 +25,9 @@ export function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      event_type TEXT NOT NULL CHECK(event_type IN ('desert', 'gap')),
+      event_type TEXT NOT NULL CHECK(event_type IN ('desert', 'gap', 'irregular')),
       event_date TEXT NOT NULL,
-      team TEXT CHECK(team IN ('A', 'B')),
+      team TEXT CHECK(team IN ('A', 'B', NULL)),
       event_group TEXT,
       google_event_id TEXT UNIQUE,
       capacity INTEGER DEFAULT 30,
@@ -57,6 +57,26 @@ export function initializeDatabase() {
     // カラムが既に存在する場合は無視
   }
 
+  // applications用マイグレーション
+  try {
+    db.exec(`ALTER TABLE applications ADD COLUMN dice3 INTEGER`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
+
+  try {
+    db.exec(`ALTER TABLE applications ADD COLUMN result_rank INTEGER`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
+
+  // user_dice_weekly用マイグレーション
+  try {
+    db.exec(`ALTER TABLE user_dice_weekly ADD COLUMN dice3 INTEGER`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
+
   // 参加申込テーブル
   db.exec(`
     CREATE TABLE IF NOT EXISTS applications (
@@ -65,13 +85,15 @@ export function initializeDatabase() {
       user_id INTEGER NOT NULL,
       dice1 INTEGER NOT NULL,
       dice2 INTEGER NOT NULL,
+      dice3 INTEGER,
       is_doubles INTEGER DEFAULT 0,
       dice_score INTEGER NOT NULL,
       used_ticket INTEGER DEFAULT 0,
       total_score INTEGER NOT NULL,
-      preferred_team TEXT CHECK(preferred_team IN ('A', 'B', 'any')),
+      preferred_team TEXT CHECK(preferred_team IN ('A', 'B', 'any', NULL)),
       result_team TEXT CHECK(result_team IN ('A', 'B', NULL)),
       result_status TEXT CHECK(result_status IN ('participant', 'candidate', 'rejected', NULL)),
+      result_rank INTEGER,
       rerolled INTEGER DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (event_id) REFERENCES events(id),
@@ -89,6 +111,7 @@ export function initializeDatabase() {
       week INTEGER NOT NULL,
       dice1 INTEGER NOT NULL,
       dice2 INTEGER NOT NULL,
+      dice3 INTEGER,
       dice_score INTEGER NOT NULL,
       is_doubles INTEGER DEFAULT 0,
       used_ticket INTEGER DEFAULT 0,

@@ -5,13 +5,14 @@ import { useState, useEffect } from 'react';
 interface DiceRollerProps {
   eventId: number;
   applicationId?: number;
-  selectedTeam: 'A' | 'B';
+  selectedTeam?: 'A' | 'B' | null;
   eventDate: string;
+  eventType: 'desert' | 'gap' | 'irregular';
   onComplete: (application: any) => void;
   onCancel: () => void;
 }
 
-export default function DiceRoller({ eventId, applicationId, selectedTeam, eventDate, onComplete, onCancel }: DiceRollerProps) {
+export default function DiceRoller({ eventId, applicationId, selectedTeam, eventDate, eventType, onComplete, onCancel }: DiceRollerProps) {
   const [tickets, setTickets] = useState(0);
   const [useTicket, setUseTicket] = useState(false);
   const [rolling, setRolling] = useState(false);
@@ -19,9 +20,20 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
   const [weeklyDice, setWeeklyDice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const isIrregular = eventType === 'irregular';
+  const diceCount = isIrregular ? 3 : 2;
+
   useEffect(() => {
-    fetchTickets();
-    fetchWeeklyDice();
+    // 非定期イベントはチケット機能なし
+    if (!isIrregular) {
+      fetchTickets();
+    }
+    // 非定期イベントは週単位サイコロを使用しない（毎回振る）
+    if (!isIrregular) {
+      fetchWeeklyDice();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const fetchTickets = async () => {
@@ -51,8 +63,8 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
   };
 
   const handleRoll = async () => {
-    // 既存サイコロがある場合（再エントリー）はアニメーションをスキップ
-    const skipAnimation = weeklyDice && !applicationId;
+    // 非定期イベントは毎回新規、定期イベントは既存サイコロがある場合スキップ
+    const skipAnimation = !isIrregular && weeklyDice && !applicationId;
 
     if (!skipAnimation) {
       setRolling(true);
@@ -65,7 +77,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId,
-          useTicket,
+          useTicket: isIrregular ? false : useTicket, // 非定期イベントはチケット機能なし
           preferredTeam: selectedTeam,
         }),
       });
@@ -137,14 +149,29 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
         ) : !rolling && !result && (
           <>
             <h3 className="text-2xl font-bold mb-4 text-center">
-              {weeklyDice ? 'この週のサイコロ' : 'サイコロを振る'}
+              {isIrregular
+                ? 'サイコロを3つ振る'
+                : (weeklyDice ? 'この週のサイコロ' : 'サイコロを振る')}
             </h3>
 
-            <div className="mb-4 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg text-center">
-              <span className="font-bold text-gray-900">チーム{selectedTeam}に申し込みます</span>
-            </div>
+            {/* 非定期イベントの説明 */}
+            {isIrregular && (
+              <div className="mb-4 bg-purple-50 border-2 border-purple-300 p-3 rounded-lg text-center">
+                <span className="font-bold text-gray-900">順位決定イベント</span>
+                <div className="text-sm text-gray-600 mt-1">
+                  サイコロ3つの合計で順位が決まります
+                </div>
+              </div>
+            )}
 
-            {weeklyDice && !applicationId && (
+            {/* 定期イベントのチーム表示 */}
+            {!isIrregular && selectedTeam && (
+              <div className="mb-4 bg-blue-50 border-2 border-blue-300 p-3 rounded-lg text-center">
+                <span className="font-bold text-gray-900">チーム{selectedTeam}に申し込みます</span>
+              </div>
+            )}
+
+            {!isIrregular && weeklyDice && !applicationId && (
               <div className="mb-4 bg-yellow-50 border-2 border-yellow-400 p-4 rounded-lg">
                 <div className="text-center mb-3">
                   <div className="text-sm text-gray-700 mb-2">この週は既にサイコロを振っています</div>
@@ -167,7 +194,8 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
               </div>
             )}
 
-            {!applicationId && tickets > 0 && !weeklyDice && (
+            {/* チケット（定期イベントのみ） */}
+            {!isIrregular && !applicationId && tickets > 0 && !weeklyDice && (
               <div className="mb-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -189,9 +217,11 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
             <div className="flex gap-3">
               <button
                 onClick={handleRoll}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition"
+                className={`flex-1 ${isIrregular ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-bold py-3 px-4 rounded-lg transition`}
               >
-                {weeklyDice && !applicationId ? '✅ このスコアで申し込む' : '🎲 振る'}
+                {!isIrregular && weeklyDice && !applicationId
+                  ? '✅ このスコアで申し込む'
+                  : `🎲 ${isIrregular ? '3つ' : ''}振る`}
               </button>
               <button
                 onClick={onCancel}
@@ -206,7 +236,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
         {rolling && !result && (
           <div className="text-center py-8">
             <div className="text-xl font-bold mb-6">サイコロを振っています...</div>
-            <div className="flex justify-center gap-8">
+            <div className={`flex justify-center ${isIrregular ? 'gap-4' : 'gap-8'}`}>
               {/* サイコロ1 */}
               <div className="dice-container">
                 <div className="dice rolling">
@@ -230,13 +260,27 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
                   <div className="face bottom">{renderDots(5)}</div>
                 </div>
               </div>
+
+              {/* サイコロ3（非定期イベントのみ） */}
+              {isIrregular && (
+                <div className="dice-container">
+                  <div className="dice rolling" style={{ animationDelay: '0.6s' }}>
+                    <div className="face front">{renderDots(1)}</div>
+                    <div className="face back">{renderDots(6)}</div>
+                    <div className="face right">{renderDots(3)}</div>
+                    <div className="face left">{renderDots(4)}</div>
+                    <div className="face top">{renderDots(2)}</div>
+                    <div className="face bottom">{renderDots(5)}</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {result && (
           <div className="text-center">
-            <div className="flex justify-center gap-8 mb-6">
+            <div className={`flex justify-center ${isIrregular ? 'gap-4' : 'gap-8'} mb-6`}>
               {/* 結果のサイコロ1 */}
               <div className="dice-container">
                 <div className={`dice show-${result.application?.dice1 || result.newDice?.dice1}`}>
@@ -260,28 +304,63 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
                   <div className="face bottom">{renderDots(5)}</div>
                 </div>
               </div>
+
+              {/* 結果のサイコロ3（非定期イベントのみ） */}
+              {isIrregular && result.application?.dice3 && (
+                <div className="dice-container">
+                  <div className={`dice show-${result.application?.dice3}`}>
+                    <div className="face front">{renderDots(1)}</div>
+                    <div className="face back">{renderDots(6)}</div>
+                    <div className="face right">{renderDots(3)}</div>
+                    <div className="face left">{renderDots(4)}</div>
+                    <div className="face top">{renderDots(2)}</div>
+                    <div className="face bottom">{renderDots(5)}</div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {result.application?.is_doubles === 1 && (
-              <div className="text-2xl font-bold text-red-600 mb-2 animate-pulse">
-                ゾロ目! スコア2倍!!
-              </div>
+            {/* ゾロ目表示 */}
+            {isIrregular ? (
+              <>
+                {result.application?.is_doubles === 2 && (
+                  <div className="text-2xl font-bold text-red-600 mb-2 animate-pulse">
+                    トリプル!! スコア3倍!!!
+                  </div>
+                )}
+                {result.application?.is_doubles === 1 && (
+                  <div className="text-2xl font-bold text-orange-600 mb-2 animate-pulse">
+                    ゾロ目! スコア2倍!!
+                  </div>
+                )}
+              </>
+            ) : (
+              result.application?.is_doubles === 1 && (
+                <div className="text-2xl font-bold text-red-600 mb-2 animate-pulse">
+                  ゾロ目! スコア2倍!!
+                </div>
+              )
             )}
 
             <div className="text-xl font-bold mb-2 text-gray-900">
               サイコロスコア: {result.application?.dice_score || result.newDice?.score}点
             </div>
 
-            {result.application?.used_ticket === 1 && (
+            {!isIrregular && result.application?.used_ticket === 1 && (
               <div className="bg-yellow-100 border-2 border-yellow-400 p-2 rounded-lg mb-2">
                 <span className="text-gray-900">🎟️ チケットボーナス +12点</span>
               </div>
             )}
 
-            <div className="bg-blue-100 border-2 border-blue-400 p-3 rounded-lg mb-4">
+            <div className={`${isIrregular ? 'bg-purple-100 border-purple-400' : 'bg-blue-100 border-blue-400'} border-2 p-3 rounded-lg mb-4`}>
               <div className="text-2xl font-bold text-gray-900">
                 合計スコア: {result.application?.total_score}点
               </div>
+              {isIrregular && result.application?.result_rank && (
+                <div className="text-lg text-purple-700 mt-1">
+                  現在の順位: {result.application.result_rank}位
+                </div>
+              )}
             </div>
 
             {result.improved === false && (

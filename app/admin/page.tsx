@@ -8,8 +8,8 @@ import SyncManagement from '@/components/SyncManagement';
 interface Event {
   id: number;
   title: string;
-  event_type: 'desert' | 'gap';
-  team: 'A' | 'B';
+  event_type: 'desert' | 'gap' | 'irregular';
+  team?: 'A' | 'B' | null;
   event_date: string;
   status: string;
   lottery_executed: number;
@@ -370,9 +370,13 @@ export default function AdminPage() {
                   <td className="px-4 py-3">{event.title}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded text-white text-sm ${
-                      event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
+                      event.event_type === 'irregular'
+                        ? 'bg-pink-500'
+                        : event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
                     }`}>
-                      {event.event_type === 'desert' ? '砂漠' : '狭間'}
+                      {event.event_type === 'irregular'
+                        ? '不定期'
+                        : event.event_type === 'desert' ? '砂漠' : '狭間'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -423,11 +427,15 @@ export default function AdminPage() {
                 <h3 className="font-bold text-lg mb-2">{event.title}</h3>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`px-2 py-1 rounded text-white text-xs ${
-                    event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
+                    event.event_type === 'irregular'
+                      ? 'bg-pink-500'
+                      : event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
                   }`}>
-                    {event.event_type === 'desert' ? '砂漠' : '狭間'}
+                    {event.event_type === 'irregular'
+                      ? '不定期'
+                      : event.event_type === 'desert' ? '砂漠' : '狭間'}
                   </span>
-                  <span className="text-xs">チーム{event.team}</span>
+                  {event.team && <span className="text-xs">チーム{event.team}</span>}
                   {event.lottery_executed ? (
                     <span className="text-green-600 font-bold text-xs">抽選済み</span>
                   ) : (
