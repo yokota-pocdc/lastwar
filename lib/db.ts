@@ -1,8 +1,13 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
-const dbPath = path.join(process.cwd(), 'lottery.db');
+// DATABASE_PATH環境変数でデータベースパスを指定可能（ステージング環境用）
+const dbPath = process.env.DATABASE_PATH
+  ? path.resolve(process.cwd(), process.env.DATABASE_PATH)
+  : path.join(process.cwd(), 'lottery.db');
 const db = new Database(dbPath);
+
+console.log('Using database:', dbPath);
 
 // 外部キー制約を無効化（user_dice_weeklyのFKエラーを回避）
 db.pragma('foreign_keys = OFF');
