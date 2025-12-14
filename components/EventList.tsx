@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import EventModal from './EventModal';
+import { apiUrl } from '@/lib/api';
 
 interface Event {
   id: number;
@@ -28,7 +29,7 @@ export default function EventList() {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(apiUrl('/api/events'));
       const data = await res.json();
       if (res.ok) {
         setEvents(data.events);
@@ -43,7 +44,7 @@ export default function EventList() {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const res = await fetch('/api/sync-calendar', { method: 'POST' });
+      const res = await fetch(apiUrl('/api/sync-calendar'), { method: 'POST' });
       const data = await res.json();
 
       if (res.ok) {

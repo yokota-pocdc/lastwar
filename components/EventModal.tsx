@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import DiceRoller from './DiceRoller';
+import { apiUrl } from '@/lib/api';
 
 interface Event {
   id: number;
@@ -50,7 +51,7 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
 
   const fetchApplication = async () => {
     try {
-      const res = await fetch(`/api/applications?eventId=${event.id}`);
+      const res = await fetch(apiUrl(`/api/applications?eventId=${event.id}`));
       const data = await res.json();
       if (res.ok && data.application) {
         setApplication(data.application);
@@ -85,7 +86,7 @@ export default function EventModal({ event, onClose, onRefresh }: EventModalProp
     }
 
     try {
-      const res = await fetch(`/api/applications/${application.id}`, {
+      const res = await fetch(apiUrl(`/api/applications/${application.id}`), {
         method: 'DELETE',
       });
 

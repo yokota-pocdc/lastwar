@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { apiUrl } from '@/lib/api';
 
 interface DiceRollerProps {
   eventId: number;
@@ -38,7 +39,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
 
   const fetchTickets = async () => {
     try {
-      const res = await fetch('/api/tickets');
+      const res = await fetch(apiUrl('/api/tickets'));
       const data = await res.json();
       if (res.ok) {
         setTickets(data.tickets);
@@ -50,7 +51,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
 
   const fetchWeeklyDice = async () => {
     try {
-      const res = await fetch(`/api/weekly-dice?eventDate=${encodeURIComponent(eventDate)}`);
+      const res = await fetch(apiUrl(`/api/weekly-dice?eventDate=${encodeURIComponent(eventDate)}`));
       const data = await res.json();
       if (res.ok) {
         setWeeklyDice(data.weeklyDice);
@@ -72,7 +73,7 @@ export default function DiceRoller({ eventId, applicationId, selectedTeam, event
 
     try {
       // 新規申込のみ対応（振り直し機能は削除）
-      const res = await fetch('/api/applications', {
+      const res = await fetch(apiUrl('/api/applications'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

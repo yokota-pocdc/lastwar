@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import EventModal from './EventModal';
+import { apiUrl } from '@/lib/api';
 
 interface Event {
   id: number;
@@ -28,7 +29,7 @@ export default function Calendar() {
   const fetchEvents = async () => {
     try {
       const month = format(currentDate, 'yyyy-MM');
-      const res = await fetch(`/api/events?month=${month}`);
+      const res = await fetch(apiUrl(`/api/events?month=${month}`));
       const data = await res.json();
       if (res.ok) {
         setEvents(data.events);

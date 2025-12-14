@@ -5,6 +5,7 @@ import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { apiUrl } from '@/lib/api';
 
 const locales = {
   'ja': ja,
@@ -138,7 +139,7 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
     try {
       if (selectedEvent) {
         // Update existing event
-        const res = await fetch(`/api/events/${selectedEvent.id}`, {
+        const res = await fetch(apiUrl(`/api/events/${selectedEvent.id}`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -153,7 +154,7 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
         }
       } else {
         // Create new event
-        const res = await fetch('/api/events', {
+        const res = await fetch(apiUrl('/api/events'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -178,7 +179,7 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
 
     // 申込者数を確認
     try {
-      const checkRes = await fetch(`/api/events/${selectedEvent.id}`);
+      const checkRes = await fetch(apiUrl(`/api/events/${selectedEvent.id}`));
       const checkData = await checkRes.json();
 
       let confirmMessage = '本当に削除しますか?';
@@ -188,7 +189,7 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
 
       if (!confirm(confirmMessage)) return;
 
-      const res = await fetch(`/api/events/${selectedEvent.id}`, {
+      const res = await fetch(apiUrl(`/api/events/${selectedEvent.id}`), {
         method: 'DELETE',
       });
 

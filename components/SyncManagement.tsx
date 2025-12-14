@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { apiUrl } from '@/lib/api';
 
 interface SyncStats {
   googleToDB: { created: number; updated: number; errors: any[] };
@@ -51,7 +52,7 @@ export default function SyncManagement() {
   const checkInconsistencies = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/sync/inconsistencies');
+      const res = await fetch(apiUrl('/api/sync/inconsistencies'));
       const data = await res.json();
       setInconsistencies(data);
     } catch (error) {
@@ -70,7 +71,7 @@ export default function SyncManagement() {
 
     try {
       setLoading(true);
-      const res = await fetch('/api/sync/inconsistencies', { method: 'POST' });
+      const res = await fetch(apiUrl('/api/sync/inconsistencies'), { method: 'POST' });
       const data = await res.json();
       setSyncResult(data);
 
@@ -89,7 +90,7 @@ export default function SyncManagement() {
   // Webhookステータスを確認
   const checkWebhookStatus = async () => {
     try {
-      const res = await fetch('/api/sync/webhook');
+      const res = await fetch(apiUrl('/api/sync/webhook'));
       const data = await res.json();
       setWebhookStatus(data);
     } catch (error) {

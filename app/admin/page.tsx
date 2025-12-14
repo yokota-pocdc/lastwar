@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminCalendar from '@/components/AdminCalendar';
 import SyncManagement from '@/components/SyncManagement';
+import { apiUrl } from '@/lib/api';
 
 interface Event {
   id: number;
@@ -58,7 +59,7 @@ export default function AdminPage() {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(apiUrl('/api/events'));
       const data = await res.json();
       if (res.ok) {
         setEvents(data.events);
@@ -72,7 +73,7 @@ export default function AdminPage() {
     e.preventDefault();
 
     try {
-      const res = await fetch('/api/events', {
+      const res = await fetch(apiUrl('/api/events'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -98,7 +99,7 @@ export default function AdminPage() {
   const handleDelete = async (id: number) => {
     // 申込者数を確認
     try {
-      const checkRes = await fetch(`/api/events/${id}`);
+      const checkRes = await fetch(apiUrl(`/api/events/${id}`));
       const checkData = await checkRes.json();
 
       let confirmMessage = '本当に削除しますか?';
@@ -108,7 +109,7 @@ export default function AdminPage() {
 
       if (!confirm(confirmMessage)) return;
 
-      const res = await fetch(`/api/events/${id}`, {
+      const res = await fetch(apiUrl(`/api/events/${id}`), {
         method: 'DELETE',
       });
 
@@ -126,7 +127,7 @@ export default function AdminPage() {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const res = await fetch('/api/sync-calendar', {
+      const res = await fetch(apiUrl('/api/sync-calendar'), {
         method: 'POST',
       });
 
@@ -156,7 +157,7 @@ export default function AdminPage() {
     if (!confirm(confirmMessage)) return;
 
     try {
-      const res = await fetch('/api/admin/clear-data', {
+      const res = await fetch(apiUrl('/api/admin/clear-data'), {
         method: 'POST',
       });
 

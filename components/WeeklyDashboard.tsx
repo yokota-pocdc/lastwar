@@ -5,6 +5,7 @@ import { format, startOfWeek, addDays, isWithinInterval } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import EntryListModal from './EntryListModal';
 import { getCurrentEventWeek, getGapEventTargetWeek, isInEntryPeriod } from '@/lib/event-week';
+import { apiUrl } from '@/lib/api';
 
 interface Event {
   id: number;
@@ -44,11 +45,11 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
   const fetchData = async () => {
     try {
       // イベント取得
-      const eventsRes = await fetch('/api/events');
+      const eventsRes = await fetch(apiUrl('/api/events'));
       const eventsData = await eventsRes.json();
 
       // 自分の申し込み取得
-      const appsRes = await fetch('/api/my-applications');
+      const appsRes = await fetch(apiUrl('/api/my-applications'));
       const appsData = await appsRes.json();
 
       if (eventsRes.ok) {
@@ -57,7 +58,7 @@ export default function WeeklyDashboard({ onEventClick, onResultClick, refreshKe
         // 申込者数を取得
         const counts: { [key: number]: number } = {};
         for (const event of eventsData.events || []) {
-          const countRes = await fetch(`/api/events/${event.id}`);
+          const countRes = await fetch(apiUrl(`/api/events/${event.id}`));
           const countData = await countRes.json();
           if (countRes.ok) {
             counts[event.id] = countData.applicationsCount || 0;
