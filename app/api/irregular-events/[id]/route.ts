@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import db from '@/lib/db';
 import { calculateRankings } from '@/lib/irregular-lottery';
+import { createIrregularCalendarEvent, updateIrregularCalendarEvent, deleteCalendarEvent } from '@/lib/google-calendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,7 @@ interface IrregularEvent {
   description: string | null;
   event_date: string;
   deadline: string;
+  google_event_id: string | null;
   status: string;
   created_at: string;
 }
@@ -90,12 +92,49 @@ export async function PUT(
       return NextResponse.json({ error: '締切日はイベント開始日より前に設定してください' }, { status: 400 });
     }
 
+    // Googleカレンダーの更新または作成
+    let calendarSynced = false;
+    let newGoogleEventId: string | null = null;
+
+    if (existing.google_event_id) {
+      // 既存のカレンダーイベントを更新
+      try {
+        await updateIrregularCalendarEvent({
+          googleEventId: existing.google_event_id,
+          title: title || existing.title,
+          eventDate: event_date || existing.event_date,
+          deadline: deadline || existing.deadline,
+          description: description !== undefined ? description : existing.description || undefined,
+        });
+        calendarSynced = true;
+      } catch (calendarError) {
+        console.error('Failed to update Google Calendar event:', calendarError);
+        // カレンダー同期エラーでも更新は続行
+      }
+    } else {
+      // Googleカレンダーに新規作成
+      try {
+        const calendarResult = await createIrregularCalendarEvent({
+          title: title || existing.title,
+          eventDate: event_date || existing.event_date,
+          deadline: deadline || existing.deadline,
+          description: description !== undefined ? description : existing.description || undefined,
+        });
+        newGoogleEventId = calendarResult.googleEventId || null;
+        calendarSynced = true;
+      } catch (calendarError) {
+        console.error('Failed to create Google Calendar event:', calendarError);
+        // カレンダー同期エラーでも更新は続行
+      }
+    }
+
     db.prepare(`
       UPDATE irregular_events
       SET title = COALESCE(?, title),
           description = COALESCE(?, description),
           event_date = COALESCE(?, event_date),
           deadline = COALESCE(?, deadline),
+          google_event_id = COALESCE(?, google_event_id),
           status = COALESCE(?, status)
       WHERE id = ?
     `).run(
@@ -103,6 +142,7 @@ export async function PUT(
       description !== undefined ? description : null,
       event_date || null,
       deadline || null,
+      newGoogleEventId,
       status || null,
       eventId
     );
@@ -111,7 +151,8 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      event
+      event,
+      calendarSynced
     });
   } catch (error) {
     console.error('Irregular event update error:', error);
@@ -142,6 +183,18 @@ export async function DELETE(
       return NextResponse.json({ error: 'イベントが見つかりません' }, { status: 404 });
     }
 
+    // Googleカレンダーからイベントを削除
+    let calendarDeleted = false;
+    if (existing.google_event_id) {
+      try {
+        await deleteCalendarEvent(existing.google_event_id);
+        calendarDeleted = true;
+      } catch (calendarError) {
+        console.error('Failed to delete Google Calendar event:', calendarError);
+        // カレンダー同期エラーでも削除は続行
+      }
+    }
+
     // 参加申込があるかチェック
     const applicationsCount = db.prepare(`
       SELECT COUNT(*) as count FROM irregular_applications WHERE event_id = ?
@@ -155,7 +208,8 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      deletedApplicationsCount: applicationsCount.count
+      deletedApplicationsCount: applicationsCount.count,
+      calendarDeleted
     });
   } catch (error) {
     console.error('Irregular event delete error:', error);

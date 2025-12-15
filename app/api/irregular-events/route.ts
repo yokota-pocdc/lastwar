@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import db from '@/lib/db';
+import { createIrregularCalendarEvent } from '@/lib/google-calendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,7 @@ interface IrregularEvent {
   description: string | null;
   event_date: string;
   deadline: string;
+  google_event_id: string | null;
   status: string;
   created_at: string;
   participants_count?: number;
@@ -68,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json();
-    const { title, description, event_date, deadline } = data;
+    const { title, description, event_date, deadline, syncToCalendar = true } = data;
 
     if (!title || !event_date || !deadline) {
       return NextResponse.json({ error: '必須項目が不足しています' }, { status: 400 });
@@ -79,16 +81,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '締切日はイベント開始日より前に設定してください' }, { status: 400 });
     }
 
+    let googleEventId: string | null = null;
+
+    // Googleカレンダーにイベントを作成
+    if (syncToCalendar) {
+      try {
+        const calendarResult = await createIrregularCalendarEvent({
+          title,
+          eventDate: event_date,
+          deadline,
+          description,
+        });
+        googleEventId = calendarResult.googleEventId || null;
+      } catch (calendarError) {
+        console.error('Failed to create Google Calendar event:', calendarError);
+        // カレンダー同期エラーでもイベントは作成する
+      }
+    }
+
     const result = db.prepare(`
-      INSERT INTO irregular_events (title, description, event_date, deadline, status)
-      VALUES (?, ?, ?, ?, 'open')
-    `).run(title, description || null, event_date, deadline);
+      INSERT INTO irregular_events (title, description, event_date, deadline, google_event_id, status)
+      VALUES (?, ?, ?, ?, ?, 'open')
+    `).run(title, description || null, event_date, deadline, googleEventId);
 
     const event = db.prepare('SELECT * FROM irregular_events WHERE id = ?').get(result.lastInsertRowid);
 
     return NextResponse.json({
       success: true,
-      event
+      event,
+      calendarSynced: !!googleEventId
     });
   } catch (error) {
     console.error('Irregular event creation error:', error);

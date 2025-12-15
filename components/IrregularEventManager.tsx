@@ -25,6 +25,7 @@ interface IrregularEvent {
   description: string | null;
   event_date: string;
   deadline: string;
+  google_event_id: string | null;
   status: string;
   created_at: string;
   participants_count?: number;
@@ -330,6 +331,7 @@ export default function IrregularEventManager() {
                 <th className="px-3 py-2 text-left">開催日</th>
                 <th className="px-3 py-2 text-left">締切日</th>
                 <th className="px-3 py-2 text-center">参加者</th>
+                <th className="px-3 py-2 text-center">カレンダー</th>
                 <th className="px-3 py-2 text-left">状態</th>
               </tr>
             </thead>
@@ -359,6 +361,13 @@ export default function IrregularEventManager() {
                   <td className="px-3 py-2 text-center">
                     {event.participants_count || 0}名
                   </td>
+                  <td className="px-3 py-2 text-center">
+                    {event.google_event_id ? (
+                      <span className="text-emerald-500" title="Googleカレンダー同期済">&#10003;</span>
+                    ) : (
+                      <span className="text-gray-400" title="未同期">-</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2">
                     <span className={`px-2 py-1 rounded text-white text-xs ${
                       event.status === 'open' ? 'bg-emerald-500' :
@@ -372,7 +381,7 @@ export default function IrregularEventManager() {
               ))}
               {events.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-3 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-3 py-8 text-center text-gray-500">
                     不定期イベントはありません
                   </td>
                 </tr>
@@ -447,14 +456,60 @@ export default function IrregularEventManager() {
               </div>
 
               {selectedEvent && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    参加者数
-                  </label>
-                  <p className="text-lg font-bold text-emerald-600">
-                    {selectedEvent.participants_count || 0}名
-                  </p>
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      参加者数
+                    </label>
+                    <p className="text-lg font-bold text-emerald-600">
+                      {selectedEvent.participants_count || 0}名
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Googleカレンダー同期
+                    </label>
+                    {selectedEvent.google_event_id ? (
+                      <p className="text-emerald-600 flex items-center gap-1">
+                        <span>&#10003;</span> 同期済み
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-orange-500 text-sm">
+                          未同期
+                        </p>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setLoading(true);
+                            try {
+                              const res = await fetch(apiUrl(`/api/irregular-events/${selectedEvent.id}`), {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({}),
+                              });
+                              if (res.ok) {
+                                fetchEvents();
+                                const data = await res.json();
+                                setSelectedEvent(data.event);
+                                alert(data.calendarSynced ? 'カレンダーに同期しました' : 'カレンダー同期に失敗しました');
+                              }
+                            } catch (error) {
+                              alert('エラーが発生しました');
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
+                          disabled={loading}
+                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm transition disabled:opacity-50"
+                        >
+                          カレンダーに同期
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
 
               {selectedEvent && (

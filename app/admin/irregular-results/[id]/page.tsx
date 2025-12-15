@@ -210,7 +210,7 @@ export default function IrregularResultsPage({ params }: { params: Promise<{ id:
                         {app.rank === 1 && <span className="text-yellow-500 text-lg">🥇</span>}
                         {app.rank === 2 && <span className="text-gray-400 text-lg">🥈</span>}
                         {app.rank === 3 && <span className="text-orange-400 text-lg">🥉</span>}
-                        {app.rank > 3 && <span>{app.rank}</span>}
+                        {app.rank && app.rank > 3 && <span>{app.rank}</span>}
                       </td>
                       <td className="px-3 py-3 font-medium">{app.user_name}</td>
                       <td className="px-3 py-3 text-center">

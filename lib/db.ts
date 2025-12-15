@@ -46,10 +46,18 @@ export function initializeDatabase() {
       description TEXT,
       event_date TEXT NOT NULL,
       deadline TEXT NOT NULL,
+      google_event_id TEXT UNIQUE,
       status TEXT DEFAULT 'open' CHECK(status IN ('open', 'closed', 'finished')),
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // 不定期イベントテーブルのマイグレーション
+  try {
+    db.exec(`ALTER TABLE irregular_events ADD COLUMN google_event_id TEXT UNIQUE`);
+  } catch (e) {
+    // カラムが既に存在する場合は無視
+  }
 
   // 不定期イベント参加テーブル
   // P: dice1-3で111-666の3桁数値、Q: sub_dice1-3で同点比較用、R: random_valueでシステムランダム
