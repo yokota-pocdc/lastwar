@@ -7,6 +7,7 @@ import LoginForm from '@/components/LoginForm';
 import Header from '@/components/Header';
 import WeeklyDashboard from '@/components/WeeklyDashboard';
 import EventModal from '@/components/EventModal';
+import IrregularEventSection from '@/components/IrregularEventSection';
 
 interface Event {
   id: number;
@@ -136,6 +137,9 @@ export default function PageContent() {
       <Header user={user} refreshKey={refreshKey} />
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
+          {/* 募集中の不定期イベント */}
+          <IrregularEventSection onRefresh={handleEventsChange} />
+
           {/* 週次ダッシュボード */}
           <WeeklyDashboard
             onEventClick={handleEventClick}

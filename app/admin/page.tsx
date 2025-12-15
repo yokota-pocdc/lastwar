@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminCalendar from '@/components/AdminCalendar';
 import SyncManagement from '@/components/SyncManagement';
+import IrregularEventManager from '@/components/IrregularEventManager';
 
 interface Event {
   id: number;
@@ -21,11 +22,17 @@ export default function AdminPage() {
   const [syncing, setSyncing] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [hideFinished, setHideFinished] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     event_type: 'desert-a',
     event_date: '',
   });
+
+  // フィルタリングされたイベント
+  const filteredEvents = hideFinished
+    ? events.filter(event => event.status !== 'finished')
+    : events;
 
   useEffect(() => {
     // sessionStorageから認証状態を確認
@@ -265,7 +272,17 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* カレンダービュー */}
         <div className="mb-6">
-          <div className="mb-4 flex flex-col sm:flex-row justify-end gap-2">
+          <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={hideFinished}
+                onChange={(e) => setHideFinished(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm font-medium text-gray-700">終了イベントを非表示</span>
+            </label>
+            <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={handleResetTickets}
               className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-md text-sm sm:text-base"
@@ -285,13 +302,19 @@ export default function AdminPage() {
             >
               {syncing ? '同期中...' : '🔄 Googleカレンダーから同期'}
             </button>
+            </div>
           </div>
-          <AdminCalendar events={events} onEventsChange={fetchEvents} />
+          <AdminCalendar events={filteredEvents} onEventsChange={fetchEvents} />
         </div>
 
         {/* 同期管理 */}
         <div className="mb-6">
           <SyncManagement />
+        </div>
+
+        {/* 不定期イベント管理 */}
+        <div className="mb-6">
+          <IrregularEventManager />
         </div>
 
         {/* 旧イベント作成フォーム（コメントアウト） */}
@@ -395,7 +418,7 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {events.map((event) => (
+              {filteredEvents.map((event) => (
                 <tr key={event.id} className="border-t">
                   <td className="px-4 py-3">{event.title}</td>
                   <td className="px-4 py-3">
@@ -447,7 +470,7 @@ export default function AdminPage() {
 
         {/* スマホ用カード表示 */}
         <div className="md:hidden space-y-4">
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <div key={event.id} className="bg-white rounded-lg shadow-lg p-4">
               <div className="mb-3">
                 <h3 className="font-bold text-lg mb-2">{event.title}</h3>

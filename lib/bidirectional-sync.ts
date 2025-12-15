@@ -74,6 +74,14 @@ export async function detectInconsistencies(): Promise<{
       AND status != 'finished'
   `).all() as Event[];
 
+  // 終了イベントのgoogle_event_idも取得（missingInDB判定で除外するため）
+  const finishedEventGoogleIds = new Set(
+    (db.prepare(`
+      SELECT google_event_id FROM events
+      WHERE status = 'finished' AND google_event_id IS NOT NULL
+    `).all() as { google_event_id: string }[]).map(e => e.google_event_id)
+  );
+
   // 1. DB側にあるがGoogleカレンダー側にないイベント
   const missingInGoogle = dbEvents.filter(event => {
     if (!event.google_event_id) return false; // google_event_idがnullなら除外
@@ -81,11 +89,14 @@ export async function detectInconsistencies(): Promise<{
   });
 
   // 2. Googleカレンダー側にあるがDB側にないイベント
+  // 終了イベントは除外する（Googleカレンダーに残っていても正常）
   const dbGoogleIds = new Set(
     dbEvents.filter(e => e.google_event_id).map(e => e.google_event_id)
   );
   const missingInDB = googleEvents.filter(e =>
-    e && e.googleEventId && !dbGoogleIds.has(e.googleEventId)
+    e && e.googleEventId &&
+    !dbGoogleIds.has(e.googleEventId) &&
+    !finishedEventGoogleIds.has(e.googleEventId)
   );
 
   // 3. google_event_idがnullの孤立イベント（将来のイベントのみ）

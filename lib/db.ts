@@ -25,7 +25,7 @@ export function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      event_type TEXT NOT NULL CHECK(event_type IN ('desert', 'gap')),
+      event_type TEXT NOT NULL CHECK(event_type IN ('desert', 'gap', 'irregular')),
       event_date TEXT NOT NULL,
       team TEXT CHECK(team IN ('A', 'B')),
       event_group TEXT,
@@ -35,6 +35,41 @@ export function initializeDatabase() {
       status TEXT DEFAULT 'open' CHECK(status IN ('open', 'closed', 'finished')),
       lottery_executed INTEGER DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 不定期イベントテーブル
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS irregular_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      event_date TEXT NOT NULL,
+      deadline TEXT NOT NULL,
+      status TEXT DEFAULT 'open' CHECK(status IN ('open', 'closed', 'finished')),
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 不定期イベント参加テーブル
+  // P: dice1-3で111-666の3桁数値、Q: sub_dice1-3で同点比較用、R: random_valueでシステムランダム
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS irregular_applications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      dice1 INTEGER NOT NULL,
+      dice2 INTEGER NOT NULL,
+      dice3 INTEGER NOT NULL,
+      sub_dice1 INTEGER NOT NULL,
+      sub_dice2 INTEGER NOT NULL,
+      sub_dice3 INTEGER NOT NULL,
+      random_value INTEGER NOT NULL,
+      rank INTEGER,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (event_id) REFERENCES irregular_events(id),
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      UNIQUE(event_id, user_id)
     )
   `);
 
