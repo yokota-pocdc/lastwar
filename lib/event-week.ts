@@ -117,8 +117,14 @@ export function getGapEventTargetWeek(now: Date = new Date()): { start: Date; en
  * イベントが申し込み可能かチェック
  * 砂漠：月曜11:00～火曜23:59の間に今週のイベントに申し込める
  * 狭間：土曜11:00～日曜23:59の間に来週のイベントに申し込める
+ * 不定期：イベント開始時刻まで申し込み可能
  */
-export function canApplyToEvent(eventDate: string, eventType: 'desert' | 'gap', now: Date = new Date()): boolean {
+export function canApplyToEvent(eventDate: string, eventType: 'desert' | 'gap' | 'irregular', now: Date = new Date()): boolean {
+  // 不定期イベントの場合はイベント開始時刻まで申し込み可能
+  if (eventType === 'irregular') {
+    return canApplyToIrregularEvent(eventDate, now);
+  }
+
   // エントリー期間外なら申し込み不可
   if (!isInEntryPeriod(eventType, now)) {
     return false;
@@ -139,4 +145,22 @@ export function canApplyToEvent(eventDate: string, eventType: 'desert' | 'gap', 
     };
     return isWithinInterval(event, { start: nextWeek.start, end: nextWeek.end });
   }
+}
+
+/**
+ * 不定期イベントに申し込み可能かチェック
+ * イベント開始時刻まで申し込み可能
+ */
+export function canApplyToIrregularEvent(eventDate: string, now: Date = new Date()): boolean {
+  const eventDateTime = new Date(eventDate);
+  return now < eventDateTime;
+}
+
+/**
+ * 不定期イベントが表示対象かチェック
+ * イベント日時を過ぎたら非表示
+ */
+export function shouldShowIrregularEvent(eventDate: string, now: Date = new Date()): boolean {
+  const eventDateTime = new Date(eventDate);
+  return now < eventDateTime;
 }

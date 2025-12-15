@@ -7,6 +7,7 @@ import LoginForm from '@/components/LoginForm';
 import Header from '@/components/Header';
 import WeeklyDashboard from '@/components/WeeklyDashboard';
 import EventModal from '@/components/EventModal';
+import { apiUrl } from '@/lib/api';
 
 interface Event {
   id: number;
@@ -49,7 +50,7 @@ export default function PageContent() {
 
       if (nameFromQuery) {
         // クエリパラメータがある場合、自動ログイン
-        await fetch('/api/auth', {
+        await fetch(apiUrl('/api/auth'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: nameFromQuery }),
@@ -57,7 +58,7 @@ export default function PageContent() {
       }
 
       // セッション確認
-      const res = await fetch('/api/auth');
+      const res = await fetch(apiUrl('/api/auth'));
       const data = await res.json();
 
       if (data.authenticated) {
@@ -73,7 +74,7 @@ export default function PageContent() {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(apiUrl('/api/events'));
       const data = await res.json();
       if (res.ok) {
         setEvents(data.events);
@@ -85,7 +86,7 @@ export default function PageContent() {
 
   const fetchAppliedEvents = async () => {
     try {
-      const res = await fetch('/api/my-applications');
+      const res = await fetch(apiUrl('/api/my-applications'));
       const data = await res.json();
       if (res.ok) {
         setAppliedEventIds(data.eventIds);

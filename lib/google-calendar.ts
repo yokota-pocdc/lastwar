@@ -20,25 +20,33 @@ function getCalendarClient(readOnly = true) {
 
 // イベントの種別を判定（週情報を含む）
 export function parseEventType(title: string, eventDate?: string): {
-  type: 'desert' | 'gap' | null;
+  type: 'desert' | 'gap' | 'irregular' | null;
   team: 'A' | 'B' | null;
   group: string | null;
   baseGroup: string | null;
 } {
   const titleLower = title.toLowerCase();
   let baseGroup: string | null = null;
-  let type: 'desert' | 'gap' | null = null;
+  let type: 'desert' | 'gap' | 'irregular' | null = null;
   let team: 'A' | 'B' | null = null;
 
-  // 括弧内のパターンを優先的にチェック: (砂漠A), (狭間B) など
-  const bracketMatch = title.match(/\(([^)]+)\)/);
+  // 括弧内のパターンを優先的にチェック: (砂漠A), (狭間B), (不定期), [不定期] など
+  const bracketMatch = title.match(/[(\[（【]([^)\]）】]+)[)\]）】]/);
   const bracketContent = bracketMatch ? bracketMatch[1] : '';
 
   // 括弧内、または全体のタイトルから判定
   const checkText = bracketContent || title;
 
+  // 不定期イベント（優先的にチェック）
+  if (checkText.includes('不定期') || checkText.includes('非定期') ||
+      checkText.toLowerCase().includes('irregular') ||
+      checkText.includes('ランキング') || checkText.includes('順位決定')) {
+    type = 'irregular';
+    team = null;
+    baseGroup = '不定期';
+  }
   // 砂漠A
-  if (checkText.includes('砂漠A') || checkText.toLowerCase().includes('sabakua')) {
+  else if (checkText.includes('砂漠A') || checkText.toLowerCase().includes('sabakua')) {
     type = 'desert';
     team = 'A';
     baseGroup = '砂漠';
@@ -185,8 +193,8 @@ export async function syncCalendarEvents(db: any) {
 // Googleカレンダーにイベントを作成
 export async function createCalendarEvent(params: {
   title: string;
-  eventType: 'desert' | 'gap';
-  team: 'A' | 'B';
+  eventType: 'desert' | 'gap' | 'irregular';
+  team?: 'A' | 'B' | null;
   eventDate: string; // ISO 8601形式
   description?: string;
 }) {
@@ -254,8 +262,8 @@ export async function createCalendarEvent(params: {
 export async function updateCalendarEvent(params: {
   googleEventId: string;
   title: string;
-  eventType: 'desert' | 'gap';
-  team: 'A' | 'B';
+  eventType: 'desert' | 'gap' | 'irregular';
+  team?: 'A' | 'B' | null;
   eventDate: string; // ISO 8601形式
   description?: string;
 }) {

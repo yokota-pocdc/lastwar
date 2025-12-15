@@ -50,6 +50,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '必須項目が不足しています' }, { status: 400 });
     }
 
+    // 非定期イベントの場合
+    if (event_type === 'irregular') {
+      // イベントグループ名を生成
+      const date = new Date(event_date);
+      const year = getYear(date);
+      const week = getWeek(date, { weekStartsOn: 1 }); // 月曜始まり
+      const eventGroup = `不定期-${year}W${week.toString().padStart(2, '0')}`;
+
+      // Google Calendar用のタイトル
+      const calendarTitle = `${title} (不定期)`;
+
+      // Googleカレンダーにイベントを作成
+      let googleEventId = null;
+      let googleHtmlLink = null;
+      try {
+        const gcalResult = await createCalendarEvent({
+          title: calendarTitle,
+          eventType: 'irregular',
+          team: null,
+          eventDate: event_date,
+        });
+        googleEventId = gcalResult.googleEventId;
+        googleHtmlLink = gcalResult.htmlLink;
+      } catch (gcalError) {
+        console.error('Google Calendar creation failed, proceeding with local event:', gcalError);
+      }
+
+      // ローカルDBにイベントを作成（非定期イベントはteam=null, capacity/participants_limit=null）
+      const result = db.prepare(`
+        INSERT INTO events (
+          title, event_type, team, event_group, event_date,
+          google_event_id, status, capacity, participants_limit
+        ) VALUES (?, 'irregular', NULL, ?, ?, ?, 'open', NULL, NULL)
+      `).run(title, eventGroup, event_date, googleEventId);
+
+      const event = db.prepare('SELECT * FROM events WHERE id = ?').get(result.lastInsertRowid);
+
+      return NextResponse.json({
+        success: true,
+        event,
+        googleCalendarLink: googleHtmlLink
+      });
+    }
+
+    // 定期イベント（砂漠/狭間）の場合
     // event_type から type と team を分離
     // 例: 'desert-a' -> type='desert', team='A'
     const [baseType, teamLetter] = event_type.split('-');

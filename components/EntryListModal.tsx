@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import { apiUrl } from '@/lib/api';
 
 interface Application {
   id: number;
@@ -37,7 +38,7 @@ export default function EntryListModal({ eventIds, eventType, onClose }: EntryLi
       const allApplications: Application[] = [];
 
       for (const eventId of eventIds) {
-        const res = await fetch(`/api/admin/results?eventId=${eventId}`);
+        const res = await fetch(apiUrl(`/api/admin/results?eventId=${eventId}`));
         const data = await res.json();
         if (res.ok && data.applications) {
           allApplications.push(...data.applications);

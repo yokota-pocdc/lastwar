@@ -1,4 +1,4 @@
-// サイコロロジック
+// サイコロロジック（2つサイコロ、定期イベント用）
 export function rollDice(): { dice1: number; dice2: number; score: number; isDoubles: boolean } {
   const dice1 = Math.floor(Math.random() * 6) + 1;
   const dice2 = Math.floor(Math.random() * 6) + 1;
@@ -9,9 +9,46 @@ export function rollDice(): { dice1: number; dice2: number; score: number; isDou
   return { dice1, dice2, score, isDoubles };
 }
 
+// 3つサイコロロジック（非定期イベント用）
+export function rollThreeDice(): {
+  dice1: number;
+  dice2: number;
+  dice3: number;
+  score: number;
+  isTriples: boolean;
+  isDoubles: boolean;
+} {
+  const dice1 = Math.floor(Math.random() * 6) + 1;
+  const dice2 = Math.floor(Math.random() * 6) + 1;
+  const dice3 = Math.floor(Math.random() * 6) + 1;
+
+  // ゾロ目判定
+  const isTriples = dice1 === dice2 && dice2 === dice3;
+  const isDoubles = !isTriples && (dice1 === dice2 || dice2 === dice3 || dice1 === dice3);
+
+  const baseScore = dice1 + dice2 + dice3;
+
+  // ゾロ目ボーナス: 3つ揃い=3倍、2つ揃い=2倍
+  let score: number;
+  if (isTriples) {
+    score = baseScore * 3;
+  } else if (isDoubles) {
+    score = baseScore * 2;
+  } else {
+    score = baseScore;
+  }
+
+  return { dice1, dice2, dice3, score, isTriples, isDoubles };
+}
+
 // 合計スコア計算
 export function calculateTotalScore(diceScore: number, usedTicket: boolean): number {
   return diceScore + (usedTicket ? 12 : 0);
+}
+
+// 非定期イベント用スコア計算（チケットなし）
+export function calculateIrregularScore(diceScore: number): number {
+  return diceScore;
 }
 
 // 抽選実行

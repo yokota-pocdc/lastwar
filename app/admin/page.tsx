@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminCalendar from '@/components/AdminCalendar';
 import SyncManagement from '@/components/SyncManagement';
+import { apiUrl } from '@/lib/api';
 
 interface Event {
   id: number;
   title: string;
-  event_type: 'desert' | 'gap';
-  team: 'A' | 'B';
+  event_type: 'desert' | 'gap' | 'irregular';
+  team?: 'A' | 'B' | null;
   event_date: string;
   status: string;
   lottery_executed: number;
@@ -58,7 +59,7 @@ export default function AdminPage() {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(apiUrl('/api/events'));
       const data = await res.json();
       if (res.ok) {
         setEvents(data.events);
@@ -72,7 +73,7 @@ export default function AdminPage() {
     e.preventDefault();
 
     try {
-      const res = await fetch('/api/events', {
+      const res = await fetch(apiUrl('/api/events'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -98,7 +99,7 @@ export default function AdminPage() {
   const handleDelete = async (id: number) => {
     // 申込者数を確認
     try {
-      const checkRes = await fetch(`/api/events/${id}`);
+      const checkRes = await fetch(apiUrl(`/api/events/${id}`));
       const checkData = await checkRes.json();
 
       let confirmMessage = '本当に削除しますか?';
@@ -108,7 +109,7 @@ export default function AdminPage() {
 
       if (!confirm(confirmMessage)) return;
 
-      const res = await fetch(`/api/events/${id}`, {
+      const res = await fetch(apiUrl(`/api/events/${id}`), {
         method: 'DELETE',
       });
 
@@ -126,7 +127,7 @@ export default function AdminPage() {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const res = await fetch('/api/sync-calendar', {
+      const res = await fetch(apiUrl('/api/sync-calendar'), {
         method: 'POST',
       });
 
@@ -156,7 +157,7 @@ export default function AdminPage() {
     if (!confirm(confirmMessage)) return;
 
     try {
-      const res = await fetch('/api/admin/clear-data', {
+      const res = await fetch(apiUrl('/api/admin/clear-data'), {
         method: 'POST',
       });
 
@@ -370,9 +371,13 @@ export default function AdminPage() {
                   <td className="px-4 py-3">{event.title}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded text-white text-sm ${
-                      event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
+                      event.event_type === 'irregular'
+                        ? 'bg-pink-500'
+                        : event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
                     }`}>
-                      {event.event_type === 'desert' ? '砂漠' : '狭間'}
+                      {event.event_type === 'irregular'
+                        ? '不定期'
+                        : event.event_type === 'desert' ? '砂漠' : '狭間'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -423,11 +428,15 @@ export default function AdminPage() {
                 <h3 className="font-bold text-lg mb-2">{event.title}</h3>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`px-2 py-1 rounded text-white text-xs ${
-                    event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
+                    event.event_type === 'irregular'
+                      ? 'bg-pink-500'
+                      : event.event_type === 'desert' ? 'bg-orange-500' : 'bg-purple-500'
                   }`}>
-                    {event.event_type === 'desert' ? '砂漠' : '狭間'}
+                    {event.event_type === 'irregular'
+                      ? '不定期'
+                      : event.event_type === 'desert' ? '砂漠' : '狭間'}
                   </span>
-                  <span className="text-xs">チーム{event.team}</span>
+                  {event.team && <span className="text-xs">チーム{event.team}</span>}
                   {event.lottery_executed ? (
                     <span className="text-green-600 font-bold text-xs">抽選済み</span>
                   ) : (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { apiUrl } from '@/lib/api';
 
 interface LoginFormProps {
   onLogin: (user: { id: number; name: string }) => void;
@@ -23,7 +24,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth', {
+      const res = await fetch(apiUrl('/api/auth'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim() }),

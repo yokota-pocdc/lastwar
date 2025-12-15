@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiUrl } from '@/lib/api';
 
 interface HeaderProps {
   user: { id: number; name: string } | null;
@@ -16,7 +17,7 @@ export default function Header({ user }: HeaderProps) {
 
   const fetchTickets = async () => {
     try {
-      const res = await fetch('/api/tickets');
+      const res = await fetch(apiUrl('/api/tickets'));
       const data = await res.json();
       if (res.ok) {
         setTickets(data.tickets);

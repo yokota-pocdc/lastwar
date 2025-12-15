@@ -5,6 +5,7 @@ import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { apiUrl } from '@/lib/api';
 
 const locales = {
   'ja': ja,
@@ -21,8 +22,8 @@ const localizer = dateFnsLocalizer({
 interface Event {
   id: number;
   title: string;
-  event_type: 'desert' | 'gap';
-  team: 'A' | 'B';
+  event_type: 'desert' | 'gap' | 'irregular';
+  team?: 'A' | 'B' | null;
   event_date: string;
   status: string;
   google_event_id?: string;
@@ -33,14 +34,14 @@ interface CalendarEvent {
   title: string;
   start: Date;
   end: Date;
-  event_type: 'desert' | 'gap';
-  team: 'A' | 'B';
+  event_type: 'desert' | 'gap' | 'irregular';
+  team?: 'A' | 'B' | null;
   google_event_id?: string;
 }
 
 interface EventFormData {
   title: string;
-  event_type: 'desert-a' | 'desert-b' | 'gap-a' | 'gap-b';
+  event_type: 'desert-a' | 'desert-b' | 'gap-a' | 'gap-b' | 'irregular';
   event_date: string;
 }
 
@@ -79,7 +80,9 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
   // Event style based on type
   const eventStyleGetter = (event: CalendarEvent) => {
     let backgroundColor = '#3174ad';
-    if (event.event_type === 'desert') {
+    if (event.event_type === 'irregular') {
+      backgroundColor = '#ec4899'; // ピンク
+    } else if (event.event_type === 'desert') {
       backgroundColor = event.team === 'A' ? '#f97316' : '#fb923c'; // オレンジ系
     } else {
       backgroundColor = event.team === 'A' ? '#9333ea' : '#a855f7'; // 紫系
@@ -112,7 +115,12 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
 
   // Handle event selection (edit existing event)
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
-    const eventTypeTeam = `${event.event_type}-${event.team.toLowerCase()}` as 'desert-a' | 'desert-b' | 'gap-a' | 'gap-b';
+    let eventTypeTeam: EventFormData['event_type'];
+    if (event.event_type === 'irregular') {
+      eventTypeTeam = 'irregular';
+    } else {
+      eventTypeTeam = `${event.event_type}-${event.team?.toLowerCase()}` as 'desert-a' | 'desert-b' | 'gap-a' | 'gap-b';
+    }
     const formattedDate = format(event.start, "yyyy-MM-dd'T'HH:mm");
 
     setFormData({
@@ -131,7 +139,7 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
     try {
       if (selectedEvent) {
         // Update existing event
-        const res = await fetch(`/api/events/${selectedEvent.id}`, {
+        const res = await fetch(apiUrl(`/api/events/${selectedEvent.id}`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -146,7 +154,7 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
         }
       } else {
         // Create new event
-        const res = await fetch('/api/events', {
+        const res = await fetch(apiUrl('/api/events'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -171,7 +179,7 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
 
     // 申込者数を確認
     try {
-      const checkRes = await fetch(`/api/events/${selectedEvent.id}`);
+      const checkRes = await fetch(apiUrl(`/api/events/${selectedEvent.id}`));
       const checkData = await checkRes.json();
 
       let confirmMessage = '本当に削除しますか?';
@@ -181,7 +189,7 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
 
       if (!confirm(confirmMessage)) return;
 
-      const res = await fetch(`/api/events/${selectedEvent.id}`, {
+      const res = await fetch(apiUrl(`/api/events/${selectedEvent.id}`), {
         method: 'DELETE',
       });
 
@@ -274,7 +282,13 @@ export default function AdminCalendar({ events, onEventsChange }: AdminCalendarP
                   <option value="desert-b">砂漠B</option>
                   <option value="gap-a">狭間A</option>
                   <option value="gap-b">狭間B</option>
+                  <option value="irregular">不定期イベント</option>
                 </select>
+                {formData.event_type === 'irregular' && (
+                  <p className="text-xs text-pink-600 mt-1">
+                    ※不定期イベントはサイコロ3つで順位決定。定員なし。イベント開始まで募集。
+                  </p>
+                )}
               </div>
 
               <div>
