@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import { apiUrl, BASE_PATH } from '@/lib/api';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const locales = {
@@ -61,7 +62,7 @@ export default function IrregularEventManager() {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('/api/irregular-events?includeParticipants=true');
+      const res = await fetch(apiUrl('/api/irregular-events?includeParticipants=true'));
       const data = await res.json();
       if (res.ok) {
         setEvents(data.events);
@@ -176,7 +177,7 @@ export default function IrregularEventManager() {
     try {
       if (selectedEvent) {
         // Update existing event
-        const res = await fetch(`/api/irregular-events/${selectedEvent.id}`, {
+        const res = await fetch(apiUrl(`/api/irregular-events/${selectedEvent.id}`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -191,7 +192,7 @@ export default function IrregularEventManager() {
         }
       } else {
         // Create new event
-        const res = await fetch('/api/irregular-events', {
+        const res = await fetch(apiUrl('/api/irregular-events'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -224,7 +225,7 @@ export default function IrregularEventManager() {
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/irregular-events/${selectedEvent.id}`, {
+      const res = await fetch(apiUrl(`/api/irregular-events/${selectedEvent.id}`), {
         method: 'DELETE',
       });
 
@@ -248,7 +249,7 @@ export default function IrregularEventManager() {
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/irregular-events/${selectedEvent.id}`, {
+      const res = await fetch(apiUrl(`/api/irregular-events/${selectedEvent.id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -533,7 +534,7 @@ export default function IrregularEventManager() {
               {selectedEvent && (
                 <div className="pt-2">
                   <a
-                    href={`/admin/irregular-results/${selectedEvent.id}`}
+                    href={`${BASE_PATH}/admin/irregular-results/${selectedEvent.id}`}
                     className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition"
                   >
                     参加者・結果を見る

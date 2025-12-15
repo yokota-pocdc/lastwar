@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { apiUrl } from '@/lib/api';
 
 interface IrregularEvent {
   id: number;
@@ -41,7 +42,7 @@ export default function IrregularEventSection({ onRefresh }: Props) {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('/api/irregular-events?status=open&includeParticipants=true');
+      const res = await fetch(apiUrl('/api/irregular-events?status=open&includeParticipants=true'));
       const data = await res.json();
       if (res.ok) {
         setEvents(data.events);
@@ -59,7 +60,7 @@ export default function IrregularEventSection({ onRefresh }: Props) {
 
   const fetchApplicationInfo = async (eventId: number) => {
     try {
-      const res = await fetch(`/api/irregular-applications?eventId=${eventId}`);
+      const res = await fetch(apiUrl(`/api/irregular-applications?eventId=${eventId}`));
       const data = await res.json();
       if (res.ok) {
         setApplicationInfo(prev => new Map(prev).set(eventId, data));
@@ -80,7 +81,7 @@ export default function IrregularEventSection({ onRefresh }: Props) {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     try {
-      const res = await fetch('/api/irregular-applications', {
+      const res = await fetch(apiUrl('/api/irregular-applications'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId }),

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
+import { apiUrl } from '@/lib/api';
 
 interface IrregularEvent {
   id: number;
@@ -43,7 +44,7 @@ export default function IrregularResultsPage({ params }: { params: Promise<{ id:
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`/api/irregular-events/${id}`);
+        const res = await fetch(apiUrl(`/api/irregular-events/${id}`));
         const data = await res.json();
         if (res.ok) {
           setEvent(data.event);
