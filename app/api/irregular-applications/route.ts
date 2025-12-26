@@ -90,6 +90,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
     }
 
+    // ユーザーがDBに存在するか確認
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(session.userId);
+    if (!user) {
+      // セッションを破棄して再ログインを促す
+      session.destroy();
+      return NextResponse.json({ error: '再ログインしてください' }, { status: 401 });
+    }
+
     const data = await request.json();
     const { eventId } = data;
 
