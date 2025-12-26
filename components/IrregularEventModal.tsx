@@ -230,8 +230,14 @@ export default function IrregularEventModal({ event, onClose, onRefresh }: Irreg
                 <div className="bg-blue-50 border-2 border-blue-300 p-4 rounded-lg text-center">
                   <div className="text-sm text-gray-600 mb-1">現在の順位</div>
                   <div className="text-3xl font-bold text-blue-600">
-                    {application.rank}位
-                    <span className="text-lg text-gray-500"> / {totalParticipants}名中</span>
+                    {application.rank ? (
+                      <>
+                        {application.rank}位
+                        <span className="text-lg text-gray-500"> / {totalParticipants}名中</span>
+                      </>
+                    ) : (
+                      <span className="text-lg">参加者{totalParticipants}名</span>
+                    )}
                   </div>
                 </div>
 

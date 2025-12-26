@@ -223,7 +223,11 @@ export default function IrregularEventSection({ onRefresh }: Props) {
                     {info?.application?.mainScore}
                   </div>
                   <div className={`text-xs ${isOpen ? '' : 'text-emerald-600'}`}>
-                    {info?.application?.rank}位 / {info?.totalParticipants}名
+                    {info?.application?.rank && info?.totalParticipants
+                      ? `${info.application.rank}位 / ${info.totalParticipants}名中`
+                      : info?.totalParticipants
+                        ? `参加者${info.totalParticipants}名`
+                        : ''}
                   </div>
                 </div>
               ) : isOpen ? (
