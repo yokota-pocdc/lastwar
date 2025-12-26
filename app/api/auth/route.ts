@@ -48,10 +48,19 @@ export async function GET() {
     const session = await getSession();
 
     if (session.userId) {
-      return NextResponse.json({
-        authenticated: true,
-        user: { id: session.userId, name: session.userName }
-      });
+      // ユーザーがDBに存在するか確認
+      const user = db.prepare('SELECT id, name FROM users WHERE id = ?').get(session.userId) as any;
+
+      if (user) {
+        return NextResponse.json({
+          authenticated: true,
+          user: { id: user.id, name: user.name }
+        });
+      } else {
+        // DBにユーザーが存在しない場合はセッションを破棄
+        console.log('Session userId not found in DB, destroying session:', session.userId);
+        session.destroy();
+      }
     }
 
     return NextResponse.json({ authenticated: false });
