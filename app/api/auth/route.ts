@@ -52,3 +52,15 @@ export async function GET() {
     return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 });
   }
 }
+
+// ログアウト
+export async function DELETE() {
+  try {
+    const session = await getSession();
+    session.destroy();
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Logout error:', error);
+    return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 });
+  }
+}

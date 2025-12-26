@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { apiUrl } from '@/lib/api';
 
 interface HeaderProps {
   user: { id: number; name: string } | null;
@@ -8,6 +9,16 @@ interface HeaderProps {
 }
 
 export default function Header({ user }: HeaderProps) {
+  const handleLogout = async () => {
+    try {
+      await fetch(apiUrl('/api/auth'), { method: 'DELETE' });
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout failed:', error);
+      window.location.href = '/';
+    }
+  };
+
   return (
     <header className="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg">
       <div className="container mx-auto px-3 py-2 sm:px-4 sm:py-3">
@@ -34,6 +45,13 @@ export default function Header({ user }: HeaderProps) {
                 <span className="font-medium text-xs sm:text-base text-white truncate max-w-[100px] sm:max-w-none">{user.name}</span>
               </div>
             )}
+
+            <button
+              onClick={handleLogout}
+              className="text-white hover:text-gray-200 text-xs sm:text-sm font-medium transition"
+            >
+              ログアウト
+            </button>
 
             <Link
               href="/admin"

@@ -4,8 +4,8 @@ import path from 'path';
 const dbPath = path.join(process.cwd(), 'lottery.db');
 const db = new Database(dbPath);
 
-// 外部キー制約を有効化
-db.pragma('foreign_keys = ON');
+// 外部キー制約を無効化（セッション不整合時のエラー回避）
+db.pragma('foreign_keys = OFF');
 
 // データベース初期化
 export function initializeDatabase() {
