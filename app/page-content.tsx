@@ -1,47 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import UserCalendar from '@/components/UserCalendar';
+import { useSearchParams } from 'next/navigation';
 import LoginForm from '@/components/LoginForm';
 import Header from '@/components/Header';
-import WeeklyDashboard from '@/components/WeeklyDashboard';
-import EventModal from '@/components/EventModal';
 import IrregularEventSection from '@/components/IrregularEventSection';
-
-interface Event {
-  id: number;
-  title: string;
-  event_type: 'desert' | 'gap';
-  team: 'A' | 'B';
-  event_date: string;
-  status: 'open' | 'closed' | 'finished';
-  event_group: string;
-  lottery_executed?: number;
-  google_event_id?: string;
-}
 
 export default function PageContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: number; name: string } | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [appliedEventIds, setAppliedEventIds] = useState<number[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     checkAuth();
   }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchEvents();
-      fetchAppliedEvents();
-    }
-  }, [isAuthenticated]);
 
   const checkAuth = async () => {
     try {
@@ -72,52 +46,13 @@ export default function PageContent() {
     }
   };
 
-  const fetchEvents = async () => {
-    try {
-      const res = await fetch('/api/events');
-      const data = await res.json();
-      if (res.ok) {
-        setEvents(data.events);
-      }
-    } catch (error) {
-      console.error('Failed to fetch events:', error);
-    }
-  };
-
-  const fetchAppliedEvents = async () => {
-    try {
-      const res = await fetch('/api/my-applications');
-      const data = await res.json();
-      if (res.ok) {
-        setAppliedEventIds(data.eventIds);
-      }
-    } catch (error) {
-      console.error('Failed to fetch applied events:', error);
-    }
-  };
-
   const handleLogin = (userData: { id: number; name: string }) => {
     setIsAuthenticated(true);
     setUser(userData);
   };
 
-  const handleEventsChange = () => {
-    fetchEvents();
-    fetchAppliedEvents();
-    setRefreshKey(prev => prev + 1); // WeeklyDashboardを更新
-  };
-
-  const handleEventClick = (event: Event) => {
-    setSelectedEvent(event);
-  };
-
-  const handleResultClick = (event: Event) => {
-    router.push(`/admin/results/${event.id}`);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedEvent(null);
-    handleEventsChange();
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
   };
 
   if (loading) {
@@ -136,39 +71,8 @@ export default function PageContent() {
     <div className="min-h-screen bg-gray-50">
       <Header user={user} refreshKey={refreshKey} />
       <main className="container mx-auto px-4 py-8">
-        <div className="space-y-8">
-          {/* 募集中の不定期イベント */}
-          <IrregularEventSection onRefresh={handleEventsChange} />
-
-          {/* 週次ダッシュボード */}
-          <WeeklyDashboard
-            onEventClick={handleEventClick}
-            onResultClick={handleResultClick}
-            refreshKey={refreshKey}
-          />
-
-          {/* カレンダービュー - 一時的に非表示（将来的に使用予定） */}
-          {/*
-          <div>
-            <h2 className="text-xl font-bold mb-4">📅 カレンダー</h2>
-            <UserCalendar
-              events={events}
-              appliedEventIds={appliedEventIds}
-              onEventsChange={handleEventsChange}
-            />
-          </div>
-          */}
-        </div>
+        <IrregularEventSection onRefresh={handleRefresh} />
       </main>
-
-      {/* イベント詳細モーダル */}
-      {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          onClose={handleCloseModal}
-          onRefresh={handleEventsChange}
-        />
-      )}
     </div>
   );
 }

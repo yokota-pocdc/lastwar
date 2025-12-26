@@ -7,19 +7,16 @@ export const dynamic = 'force-dynamic';
 // すべてのデータを削除（試験用）
 export async function POST(request: NextRequest) {
   try {
-    // すべてのデータを削除（Googleカレンダーから再同期可能）
+    // すべてのデータを削除
     const transaction = db.transaction(() => {
-      // すべての申し込みデータを削除
-      db.prepare('DELETE FROM applications').run();
+      // 不定期イベント参加データを削除
+      db.prepare('DELETE FROM irregular_applications').run();
 
-      // すべての週単位サイコロ履歴を削除
-      db.prepare('DELETE FROM user_dice_weekly').run();
+      // 不定期イベントを削除
+      db.prepare('DELETE FROM irregular_events').run();
 
-      // すべてのユーザー情報を削除
+      // ユーザー情報を削除
       db.prepare('DELETE FROM users').run();
-
-      // すべてのイベントデータを削除
-      db.prepare('DELETE FROM events').run();
     });
 
     transaction();
@@ -30,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'すべてのデータを削除しました（申し込み、ユーザー、サイコロ履歴、イベント）'
+      message: 'すべてのデータを削除しました'
     });
   } catch (error) {
     console.error('Clear applications error:', error);
