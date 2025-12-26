@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import LoginForm from '@/components/LoginForm';
 import Header from '@/components/Header';
 import IrregularEventSection from '@/components/IrregularEventSection';
+import { apiUrl } from '@/lib/api';
 
 export default function PageContent() {
   const searchParams = useSearchParams();
@@ -24,7 +25,7 @@ export default function PageContent() {
 
       if (nameFromQuery) {
         // クエリパラメータがある場合、自動ログイン
-        await fetch('/api/auth', {
+        await fetch(apiUrl('/api/auth'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: nameFromQuery }),
@@ -32,7 +33,7 @@ export default function PageContent() {
       }
 
       // セッション確認
-      const res = await fetch('/api/auth');
+      const res = await fetch(apiUrl('/api/auth'));
       const data = await res.json();
 
       if (data.authenticated) {
