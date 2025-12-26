@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { apiUrl } from '@/lib/api';
+import { apiUrl, BASE_PATH } from '@/lib/api';
 
 interface HeaderProps {
   user: { id: number; name: string } | null;
@@ -12,10 +12,10 @@ export default function Header({ user }: HeaderProps) {
   const handleLogout = async () => {
     try {
       await fetch(apiUrl('/api/auth'), { method: 'DELETE' });
-      window.location.href = '/';
+      window.location.href = BASE_PATH || '/';
     } catch (error) {
       console.error('Logout failed:', error);
-      window.location.href = '/';
+      window.location.href = BASE_PATH || '/';
     }
   };
 
