@@ -91,7 +91,15 @@ export async function POST(request: NextRequest) {
     }
 
     // ユーザーがDBに存在するか確認
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(session.userId);
+    console.log('Application attempt:', { sessionUserId: session.userId, sessionUserIdType: typeof session.userId });
+
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(session.userId) as any;
+    console.log('User lookup result:', user ? { id: user.id, name: user.name } : 'NOT FOUND');
+
+    // デバッグ: 全ユーザーを表示
+    const allUsers = db.prepare('SELECT id, name FROM users').all();
+    console.log('All users in DB:', allUsers);
+
     if (!user) {
       // セッションを破棄して再ログインを促す
       session.destroy();

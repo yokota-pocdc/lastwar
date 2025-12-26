@@ -21,13 +21,21 @@ export async function POST(request: NextRequest) {
     if (!user) {
       const result = db.prepare('INSERT INTO users (name) VALUES (?)').run(name.trim());
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid) as any;
+      console.log('Created new user:', { id: user.id, name: user.name, idType: typeof user.id });
+    } else {
+      console.log('Found existing user:', { id: user.id, name: user.name, idType: typeof user.id });
     }
 
+    // BigInt対策: 確実にnumber型に変換
+    const userId = Number(user.id);
+
     session.userName = user.name;
-    session.userId = user.id;
+    session.userId = userId;
     await session.save();
 
-    return NextResponse.json({ success: true, user: { id: user.id, name: user.name } });
+    console.log('Session saved:', { userId: session.userId, userName: session.userName });
+
+    return NextResponse.json({ success: true, user: { id: userId, name: user.name } });
   } catch (error) {
     console.error('Auth error:', error);
     return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 });

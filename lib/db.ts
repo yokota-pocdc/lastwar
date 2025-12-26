@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 
 const dbPath = path.join(process.cwd(), 'lottery.db');
+console.log('Database path:', dbPath);
 const db = new Database(dbPath);
 
 // 外部キー制約を無効化（セッション不整合時のエラー回避）
