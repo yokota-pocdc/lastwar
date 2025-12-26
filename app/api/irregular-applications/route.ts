@@ -57,9 +57,9 @@ export async function GET(request: NextRequest) {
 
     // 全参加者を取得してランキングを計算
     const allApplications = db.prepare(`
-      SELECT ia.*, u.name as user_name
+      SELECT ia.*, COALESCE(u.name, '(不明)') as user_name
       FROM irregular_applications ia
-      JOIN users u ON ia.user_id = u.id
+      LEFT JOIN users u ON ia.user_id = u.id
       WHERE ia.event_id = ?
     `).all(parseInt(eventId)) as any[];
 
@@ -156,9 +156,9 @@ export async function POST(request: NextRequest) {
 
     // 全参加者を取得してランキングを計算
     const allApplications = db.prepare(`
-      SELECT ia.*, u.name as user_name
+      SELECT ia.*, COALESCE(u.name, '(不明)') as user_name
       FROM irregular_applications ia
-      JOIN users u ON ia.user_id = u.id
+      LEFT JOIN users u ON ia.user_id = u.id
       WHERE ia.event_id = ?
     `).all(eventId) as any[];
 

@@ -41,9 +41,9 @@ export async function GET(
 
     // 参加者一覧を取得（ランキング付き）
     const applications = db.prepare(`
-      SELECT ia.*, u.name as user_name
+      SELECT ia.*, COALESCE(u.name, '(不明)') as user_name
       FROM irregular_applications ia
-      JOIN users u ON ia.user_id = u.id
+      LEFT JOIN users u ON ia.user_id = u.id
       WHERE ia.event_id = ?
       ORDER BY ia.created_at ASC
     `).all(eventId) as any[];
