@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiUrl } from '@/lib/api';
 
@@ -35,8 +36,9 @@ interface Application {
   };
 }
 
-export default function IrregularResultsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function IrregularResultsPage() {
+  const params = useParams();
+  const id = params.id as string;
   const [event, setEvent] = useState<IrregularEvent | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
