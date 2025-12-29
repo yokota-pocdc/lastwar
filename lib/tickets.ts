@@ -40,3 +40,8 @@ export function useTicket(userId: number): boolean {
   }
   return false;
 }
+
+// チケット返却（エントリー削除時に使用）
+export function refundTicket(userId: number): void {
+  db.prepare('UPDATE users SET tickets_remaining = tickets_remaining + 1 WHERE id = ?').run(userId);
+}

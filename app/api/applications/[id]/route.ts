@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import db from '@/lib/db';
 import { updateRealtimeRankings } from '@/lib/realtime-lottery';
+import { refundTicket } from '@/lib/tickets';
+import { deleteWeeklyDice } from '@/lib/weekly-dice';
+import { getEventWeek } from '@/lib/event-week';
+import { getYear, getWeek } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +26,7 @@ export async function DELETE(
 
     // 申込情報を取得して、自分の申込かチェック
     const application = db.prepare(`
-      SELECT a.*, e.event_date, e.lottery_executed
+      SELECT a.*, e.event_date, e.event_type, e.lottery_executed
       FROM applications a
       JOIN events e ON a.event_id = e.id
       WHERE a.id = ?
@@ -43,6 +47,17 @@ export async function DELETE(
         { status: 400 }
       );
     }
+
+    // チケットを使用していた場合は返却
+    if (application.used_ticket) {
+      refundTicket(session.userId);
+    }
+
+    // イベント週の情報を取得して、週別サイコロ記録を削除
+    const eventWeek = getEventWeek(application.event_date);
+    const year = getYear(eventWeek.start);
+    const week = getWeek(eventWeek.start, { weekStartsOn: 1 });
+    deleteWeeklyDice(session.userId, year, week, application.event_type);
 
     // 申し込みを削除
     db.prepare('DELETE FROM applications WHERE id = ?').run(applicationId);
