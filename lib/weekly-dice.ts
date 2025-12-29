@@ -101,13 +101,3 @@ export function saveWeeklyDice(params: {
     return db.prepare('SELECT * FROM user_dice_weekly WHERE id = ?').get(result.lastInsertRowid) as WeeklyDice;
   }
 }
-
-/**
- * 週単位のサイコロ記録を削除
- */
-export function deleteWeeklyDice(userId: number, year: number, week: number, eventType: 'desert' | 'gap'): void {
-  db.prepare(`
-    DELETE FROM user_dice_weekly
-    WHERE user_id = ? AND year = ? AND week = ? AND event_type = ?
-  `).run(userId, year, week, eventType);
-}
