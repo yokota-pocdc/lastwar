@@ -22,11 +22,11 @@ export async function GET(request: NextRequest) {
     const results = db.prepare(`
       SELECT
         a.*,
-        u.name as user_name,
+        COALESCE(u.name, '(削除されたユーザー)') as user_name,
         e.title as event_title
       FROM applications a
-      JOIN users u ON a.user_id = u.id
-      JOIN events e ON a.event_id = e.id
+      LEFT JOIN users u ON a.user_id = u.id
+      LEFT JOIN events e ON a.event_id = e.id
       WHERE a.event_id = ?
       ORDER BY a.total_score DESC, a.created_at ASC
     `).all(eventId);
